@@ -69,13 +69,27 @@ function isResMsg(d: unknown, id: number): d is ResMsg {
 	}
 
 	let counter = 0;
+	const TRANSPORT_TIMEOUT_MS = 20_000;
 	const transport = (path: string, init: TransportInit): Promise<unknown> =>
 		new Promise<unknown>((resolve, reject) => {
 			const id = ++counter;
+			console.debug('[handyman-ext] inject: req sent', id, path);
+			// Bound the wait: if the relay/background chain never answers (worker
+			// asleep, host blocked, proxy down), reject so the widget's
+			// session.fail() surfaces "couldn't finish" instead of hanging forever.
+			const timer = window.setTimeout(() => {
+				window.removeEventListener('message', onMsg);
+				console.debug('[handyman-ext] inject: timeout', id, path);
+				reject(
+					new Error(`transport timeout after ${TRANSPORT_TIMEOUT_MS}ms for ${path}`),
+				);
+			}, TRANSPORT_TIMEOUT_MS);
 			const onMsg = (ev: MessageEvent): void => {
 				if (ev.source !== window) return;
 				if (!isResMsg(ev.data, id)) return;
+				window.clearTimeout(timer);
 				window.removeEventListener('message', onMsg);
+				console.debug('[handyman-ext] inject: res received', id, ev.data.ok);
 				if (ev.data.ok) resolve(ev.data.body);
 				else reject(new Error(ev.data.error ?? 'transport error'));
 			};

@@ -1,6 +1,8 @@
-// SVG arrow pointer. Two-wrapper trick from the reference: the outer
-// wrapper glides via a transform transition, the inner wrapper idle-bobs
-// on a keyframe animation, so glide and bob never fight over `transform`.
+// SVG arrow pointer. Two-wrapper trick from the reference: the OUTER wrapper
+// travels (a requestAnimationFrame tween arcs its transform from the current
+// spot to the target), the INNER wrapper idle-bobs on a keyframe animation, so
+// travel and bob never fight over `transform`. dockTo still uses a one-shot CSS
+// transition for the shrink-to-FAB landing.
 
 import type { CutBox, Side } from './overlay.ts';
 
@@ -22,6 +24,38 @@ const HALF = POINTER_SIZE / 2;
 const EDGE_GAP = 12 + HALF;
 const DOCK_MS = 650;
 const PRESS_MS = 300;
+
+// Travel tuning. Duration scales with distance so long trips take a beat
+// longer (no teleport feel) and short hops stay snappy — clamped both ends.
+const TRAVEL_SPEED = 1.6; // px per ms of glide
+const TRAVEL_MIN_MS = 350;
+const TRAVEL_MAX_MS = 900;
+// How far the path bows out perpendicular to the straight line, so the cursor
+// arcs like a hand-guided move instead of sliding on a rail. Fraction of the
+// trip distance, capped so big trips don't swing wildly.
+const ARC_BOW = 0.2;
+const ARC_BOW_CAP = 60;
+
+// easeInOutCubic — accelerate away, settle into the target.
+function easeInOutCubic(t: number): number {
+	return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function prefersReducedMotion(): boolean {
+	try {
+		return (
+			typeof window !== 'undefined' &&
+			typeof window.matchMedia === 'function' &&
+			window.matchMedia('(prefers-reduced-motion: reduce)').matches
+		);
+	} catch {
+		return false;
+	}
+}
+
+const CAN_RAF =
+	typeof requestAnimationFrame === 'function' &&
+	typeof cancelAnimationFrame === 'function';
 
 // Plain cursor-arrow polygon, tip at top center pointing straight up.
 // High-contrast fill + outline stroke so it reads on any background.
@@ -45,7 +79,10 @@ const POINTER_CSS = `
 	left: 0;
 	width: ${POINTER_SIZE}px;
 	height: ${POINTER_SIZE}px;
-	transition: transform 500ms ease, opacity 300ms ease;
+	/* Fallback only. Travel is driven per-frame by rAF (which sets an inline
+	   transition without a transform component so it can't double-animate);
+	   dockTo sets its own transform transition inline for the landing. */
+	transition: opacity 300ms ease;
 	will-change: transform;
 	pointer-events: none;
 }
@@ -91,18 +128,119 @@ export function createPointer(opts: { zIndex: number }): PointerHandle {
 	document.body.appendChild(wrap);
 	wrap.style.display = 'none';
 
+	// Logical state the tween interpolates: pointer CENTER (cx, cy) and arrow
+	// rotation. `placed` gates the first appearance — a fresh (hidden/docked)
+	// pointer snaps to its first target instead of gliding in from a stale spot.
+	let curX = HALF;
+	let curY = HALF;
+	let curRot = 0;
+	let placed = false;
+	let rafId: number | null = null;
+
+	function cancelTween(): void {
+		if (rafId !== null) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
+	}
+
+	// Low-level: paint the OUTER wrapper transform. The inner bob wrapper owns
+	// the idle bob / press dip on its own transform, so glide never fights bob.
 	function place(cx: number, cy: number, rot: number, scale = 1): void {
 		wrap.style.transform = `translate(${cx - HALF}px, ${cy - HALF}px) rotate(${rot}deg)${scale !== 1 ? ` scale(${scale})` : ''}`;
 	}
 
+	// Jump straight to a target with no transform transition (first placement
+	// or reduced-motion). Records state so a later glide starts from here.
+	function snap(x: number, y: number, rot: number): void {
+		cancelTween();
+		curX = x;
+		curY = y;
+		curRot = rot;
+		placed = true;
+		wrap.style.transition = 'opacity 300ms ease';
+		place(x, y, rot);
+	}
+
+	// Glide the OUTER wrapper from its current position to (x, y, rot) along a
+	// gently bowed quadratic Bézier, driven frame-by-frame so it reads as the
+	// cursor travelling across the page. Ends EXACTLY on target (the ring/card
+	// share this geometry, so drift would misalign them).
+	function travel(x: number, y: number, rot: number): void {
+		cancelTween();
+		const dx = x - curX;
+		const dy = y - curY;
+		const dist = Math.hypot(dx, dy);
+
+		// First show, reduced motion, no rAF, or a negligible move → snap.
+		if (!placed || dist < 1 || prefersReducedMotion() || !CAN_RAF) {
+			snap(x, y, rot);
+			return;
+		}
+
+		const fromX = curX;
+		const fromY = curY;
+		const fromRot = curRot;
+		// Shortest angular path so the arrow never spins the long way round.
+		const dRot = ((rot - fromRot + 540) % 360) - 180;
+
+		// Control point: midpoint pushed perpendicular to the travel line.
+		const midX = (fromX + x) / 2;
+		const midY = (fromY + y) / 2;
+		const bow = Math.min(dist * ARC_BOW, ARC_BOW_CAP);
+		const nX = -dy / dist; // unit normal to the straight line
+		const nY = dx / dist;
+		const ctrlX = midX + nX * bow;
+		const ctrlY = midY + nY * bow;
+
+		const duration = Math.min(
+			TRAVEL_MAX_MS,
+			Math.max(TRAVEL_MIN_MS, dist / TRAVEL_SPEED),
+		);
+		// rAF paints every frame — the CSS transform transition must be off or
+		// it would double-animate and overshoot. Opacity keeps its ease.
+		wrap.style.transition = 'opacity 300ms ease';
+		const start = performance.now();
+
+		const step = (now: number): void => {
+			const t = Math.min(1, (now - start) / duration);
+			const e = easeInOutCubic(t);
+			const u = 1 - e;
+			// Quadratic Bézier B(e) = u²·from + 2·u·e·ctrl + e²·to.
+			const px = u * u * fromX + 2 * u * e * ctrlX + e * e * x;
+			const py = u * u * fromY + 2 * u * e * ctrlY + e * e * y;
+			const pr = fromRot + dRot * e;
+			// Track live position so an interrupting travel() starts from here.
+			curX = px;
+			curY = py;
+			curRot = pr;
+			place(px, py, pr);
+			if (t < 1) {
+				rafId = requestAnimationFrame(step);
+			} else {
+				rafId = null;
+				curX = x;
+				curY = y;
+				curRot = rot;
+				place(x, y, rot); // land exactly on target
+			}
+		};
+		rafId = requestAnimationFrame(step);
+	}
+
 	return {
 		show(): void {
+			// Intentionally does NOT reset `placed`: between steps the pointer
+			// stays visible and should GLIDE to the next target. Only hide()/
+			// dockTo (true disappearance) reset it so a fresh entrance snaps.
 			wrap.style.display = '';
 			wrap.style.opacity = '1';
 			bob.className = 'handyman-pointer__bob';
 		},
 		hide(): void {
+			cancelTween();
 			wrap.style.display = 'none';
+			placed = false;
 		},
 		pointTo(cut: CutBox, side: Side): void {
 			const cx = cut.left + cut.width / 2;
@@ -123,7 +261,7 @@ export function createPointer(opts: { zIndex: number }): PointerHandle {
 					y = cut.top - EDGE_GAP;
 					break;
 			}
-			place(x, y, SIDE_ROT[side]);
+			travel(x, y, SIDE_ROT[side]);
 		},
 		press(): Promise<void> {
 			bob.className = 'handyman-pointer__bob--press';
@@ -135,19 +273,26 @@ export function createPointer(opts: { zIndex: number }): PointerHandle {
 			});
 		},
 		dockTo(x: number, y: number): Promise<void> {
-			// Bob pauses for the landing so the dock isn't mid-hop.
-			bob.className = '';
+			// Stop any in-flight glide so the dock owns the transform, then land
+			// via a CSS transition (reduced motion → instant).
+			cancelTween();
+			bob.className = ''; // Bob pauses so the dock isn't mid-hop.
+			const dockMs = prefersReducedMotion() ? 0 : DOCK_MS;
+			wrap.style.transition = `transform ${dockMs}ms ease, opacity 300ms ease`;
+			curX = x;
+			curY = y;
+			curRot = 0;
 			place(x, y, 0, 0.5);
-			wrap.style.transition = `transform ${DOCK_MS}ms ease, opacity 300ms ease`;
 			return new Promise((resolve) => {
 				setTimeout(() => {
 					wrap.style.display = 'none';
-					wrap.style.transition = 'transform 500ms ease, opacity 300ms ease';
+					placed = false; // next entrance snaps in fresh
 					resolve();
-				}, DOCK_MS);
+				}, dockMs);
 			});
 		},
 		destroy(): void {
+			cancelTween();
 			wrap.remove();
 		},
 	};
