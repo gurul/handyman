@@ -2,6 +2,8 @@
 
 Maps a website into a machine-readable "site guide" using H Company's Agents Platform with multi-agent fan-out. Mount `scoutRouter` (from `router.ts`) under `/scout` in the server's Hono app.
 
+**Validated live** (2026-07-11, real `HAI_API_KEY`, target `news.ycombinator.com`): the `handyman-scout` manager fanned out to 3 parallel `handyman-page-scout` then 2 `handyman-flow-verifier` cloud-browser sessions (~5m25s) and returned a schema-validated guide covering the "submit a post" and "use search" flows. End-to-end proof of the hai-agents SDK + multi-agent manager→subagents pattern.
+
 ## Topology
 
 One manager, two specialist subagents, provisioned idempotently by `setup.ts` (create-or-update by name, never at import time):
