@@ -128,6 +128,9 @@ const OVERLAY_CSS = `
 }
 .handyman-card {
 	position: fixed;
+	/* The :host is click-through so the page stays interactive; the card is the
+	   one part that must take clicks, or Next/Skip/Do-it-for-me are dead. */
+	pointer-events: auto;
 	width: ${CARD_W}px;
 	box-sizing: border-box;
 	background: var(--handyman-paper, #fff);
