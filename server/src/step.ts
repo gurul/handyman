@@ -11,10 +11,12 @@ import { stepJsonSchema, stepSchema } from './schema.ts';
 import { getSession, type ChatMessage } from './sessions.ts';
 
 const MODEL_NAME = 'holo3-1-35b-a3b';
-// H docs cap the image budget at 3; we keep 2 (current + one prior). Durable
-// state flows through `note`, so a second image is enough for this
-// human-actuator loop, and one fewer image per turn cuts vision-token latency.
-const MAX_IMAGES_IN_CONTEXT = 2;
+// H docs cap the image budget at 3; we keep 1 (the current viewport only).
+// Images dominate the prefill, and prefill dominates the per-step latency the
+// user feels after a click. Durable state flows through `note` and the tool
+// history, so the prior screenshot was carrying little: what the model has to
+// ground against is what is on screen NOW.
+const MAX_IMAGES_IN_CONTEXT = 1;
 // A single step's JSON is tiny; cap output so an unbounded ceiling can't let the
 // model ramble (enable_thinking is off, so no reasoning tokens are billed here).
 const MAX_OUTPUT_TOKENS = 512;

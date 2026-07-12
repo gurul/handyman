@@ -56,10 +56,15 @@ export interface SessionTimings {
 // narration dominate; these fixed animation/settle waits were padded). Still
 // long enough for the glide to read and the DOM to quiesce; all overridable via
 // deps.timings (tests inject their own). narrationCap is voice-bound — untouched.
+// Tuned for felt latency between "user clicks" and "next card appears". The
+// model call is the floor (~1s+); everything here is the overhead we control, so
+// it is kept as short as the page can tolerate. settleQuiet is the real lever:
+// pages that animate keep mutating, and a long quiet window waits out the
+// animation before we even start the capture.
 const DEFAULT_TIMINGS: SessionTimings = {
-	settleQuiet: 300,
-	settleFloor: 180,
-	settleCap: 1400,
+	settleQuiet: 140,
+	settleFloor: 80,
+	settleCap: 700,
 	glideMs: 350,
 	narrationCap: 12000,
 	postActPause: 250,
@@ -521,6 +526,26 @@ export function createSession(deps: SessionDeps): SessionHandle {
 				return;
 			case 'act_click':
 			case 'act_write':
+				// The model asked to drive. That is only allowed if the USER asked
+				// for it ("Do it for me"), and the model is never told whether they
+				// did — so it guesses, and its guess is not authoritative here. Left
+				// ungated, a stray act_* turns the tour into autopilot: it performs
+				// the step itself, immediately observes its own result, and runs the
+				// whole flow while the user watches. Degrade to a point step instead:
+				// same target, same sentence, but the user paces it.
+				if (!actMode) {
+					showPoint(
+						{
+							tool_name: 'point',
+							element: tc.element,
+							x: tc.x,
+							y: tc.y,
+							instruction: tc.instruction,
+						},
+						myGen,
+					);
+					return;
+				}
 				void performAct(tc, myGen);
 				return;
 		}
@@ -690,12 +715,18 @@ export function createSession(deps: SessionDeps): SessionHandle {
 		}
 	}
 
+	/** The user's own words win. The model's `content` is a suggestion of what to
+	 *  type; if the field already holds something, that something is the user's
+	 *  and typing over it destroys their work. Fill only what is empty. */
 	function dispatchWrite(el: Element, tc: ActWriteCall): void {
 		if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
 			el.focus();
-			setNativeValue(el, tc.content);
-			el.dispatchEvent(new Event('input', { bubbles: true }));
-			el.dispatchEvent(new Event('change', { bubbles: true }));
+			if (el.value.trim() === '') {
+				setNativeValue(el, tc.content);
+				el.dispatchEvent(new Event('input', { bubbles: true }));
+				el.dispatchEvent(new Event('change', { bubbles: true }));
+			}
+			// press_enter still submits — with THEIR text if they wrote their own.
 			if (tc.press_enter) {
 				const opts = { key: 'Enter', code: 'Enter', bubbles: true };
 				el.dispatchEvent(new KeyboardEvent('keydown', opts));
@@ -705,8 +736,10 @@ export function createSession(deps: SessionDeps): SessionHandle {
 		}
 		if (el instanceof HTMLElement && el.isContentEditable) {
 			el.focus();
-			el.textContent = tc.content;
-			el.dispatchEvent(new Event('input', { bubbles: true }));
+			if ((el.textContent ?? '').trim() === '') {
+				el.textContent = tc.content;
+				el.dispatchEvent(new Event('input', { bubbles: true }));
+			}
 		}
 	}
 
@@ -838,19 +871,22 @@ export function createSession(deps: SessionDeps): SessionHandle {
 			doIt(): void {
 				actMode = true;
 				persist();
-				if (
-					state === 'waiting_user' &&
-					currentStep !== null &&
-					currentStep.tool_call.tool_name === 'point' &&
-					currentSnap !== null
-				) {
-					const tc = currentStep.tool_call;
-					detachTargetListener();
-					// Undo the double-count: performAct increments stepNumber
-					// for what is visually the same step.
-					stepNumber -= 1;
-					void performAct({ ...tc, tool_name: 'act_click' }, gen);
+				if (state !== 'waiting_user' || currentStep === null || currentSnap === null) {
+					return;
 				}
+				const tc = currentStep.tool_call;
+				if (tc.tool_name === 'answer') return;
+				detachTargetListener();
+				// Undo the double-count: performAct increments stepNumber
+				// for what is visually the same step.
+				stepNumber -= 1;
+				// A point step becomes a click. An act_* step is one the model already
+				// wanted to perform and the gate downgraded to a point — now that the
+				// user has opted in, run the original call (act_write keeps its text).
+				void performAct(
+					tc.tool_name === 'point' ? { ...tc, tool_name: 'act_click' } : tc,
+					gen,
+				);
 			},
 			targetLost(): void {
 				// Element vanished mid-step: re-observe rather than crash.

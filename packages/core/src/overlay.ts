@@ -275,6 +275,29 @@ export function createOverlay(opts: {
 	// capture-phase key handlers key on the document).
 	const shadow = root.attachShadow({ mode: 'open' });
 
+	// Clicking our own card must not dismiss the page's open UI. Sites close
+	// dropdowns/menus/popovers on a document-level "click outside" listener, and
+	// a click on the card IS outside their menu — so pressing Next would collapse
+	// the very menu the next step points into. Stopping propagation at the host,
+	// in the BUBBLE phase, keeps the event fully usable inside the shadow root
+	// (our buttons have already handled it by the time it reaches here) while it
+	// never reaches document/window listeners on the page.
+	// Caveat: a page listening in the CAPTURE phase still sees it — capture runs
+	// top-down before the event ever reaches us, and the only way to beat that is
+	// to swallow the event before our own buttons get it.
+	const POINTER_EVENTS = [
+		'pointerdown',
+		'pointerup',
+		'mousedown',
+		'mouseup',
+		'click',
+		'dblclick',
+		'touchstart',
+		'touchend',
+	] as const;
+	const containPointer = (e: Event): void => e.stopPropagation();
+	for (const type of POINTER_EVENTS) root.addEventListener(type, containPointer);
+
 	const style = document.createElement('style');
 	style.textContent = OVERLAY_CSS;
 	shadow.appendChild(style);

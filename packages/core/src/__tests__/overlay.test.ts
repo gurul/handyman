@@ -134,6 +134,24 @@ describe('overlay', () => {
 		expect(cb.onTargetLost).toHaveBeenCalledTimes(1);
 	});
 
+	// A page closes its dropdowns on a document-level "click outside" listener,
+	// and a click on our card counts as outside. If the click reaches the page,
+	// pressing Next collapses the menu the next step is about to point into.
+	it('clicking the card does not leak the click to the page', () => {
+		show();
+		const onPageClick = mock(() => {});
+		document.addEventListener('click', onPageClick);
+		try {
+			(q('[data-handyman-btn="next"]') as HTMLElement).click();
+			// Our own button still ran...
+			expect(cb.onNext).toHaveBeenCalledTimes(1);
+			// ...but the page's outside-click dismisser never saw it.
+			expect(onPageClick).not.toHaveBeenCalled();
+		} finally {
+			document.removeEventListener('click', onPageClick);
+		}
+	});
+
 	it('showAnswer renders content, hides spotlight, Done closes', () => {
 		show();
 		const onDone = mock(() => {});

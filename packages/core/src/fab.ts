@@ -267,6 +267,23 @@ export function createFab(opts: {
 		window.addEventListener(type, onWidgetKey, true);
 	}
 
+	// Same containment the overlay card uses: clicking the FAB (mic, ask box) is
+	// an "outside click" to the page, which would dismiss any menu the user has
+	// open. Bubble-phase stop at the host: our own controls, deeper in the shadow
+	// tree, have already handled the event; the page never sees it.
+	const POINTER_EVENTS = [
+		'pointerdown',
+		'pointerup',
+		'mousedown',
+		'mouseup',
+		'click',
+		'dblclick',
+		'touchstart',
+		'touchend',
+	] as const;
+	const containPointer = (e: Event): void => e.stopPropagation();
+	for (const type of POINTER_EVENTS) root.addEventListener(type, containPointer);
+
 	return {
 		center(): { x: number; y: number } {
 			const r = fab.getBoundingClientRect();

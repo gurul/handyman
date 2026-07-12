@@ -223,7 +223,24 @@ describe('session', () => {
 		expect(requests.length).toBe(2);
 	});
 
-	it('act_write dispatches focus, native value, input/change, and Enter', async () => {
+	/** Autopilot is opt-in. A model that emits act_* on its own must not get to
+	 *  drive: it would perform the step, observe its own result, and run the whole
+	 *  flow while the user watches. */
+	it('does not perform act_* steps the user never asked for', async () => {
+		const input = document.createElement('input');
+		stubRect(input, 100, 100, 200, 30);
+		document.body.appendChild(input);
+		document.elementFromPoint = () => input;
+
+		mockFetch([writeStep(), answerStep()]);
+		session.ask('fill the form');
+		await waitFor(() => session.getState() === 'waiting_user', 3000);
+		// Downgraded to a point step: shown and spotlighted, but nothing typed.
+		expect(input.value).toBe('');
+		expect(q('.handyman-card').textContent).toContain('Type the customer name');
+	});
+
+	it('act_write performs once the user opts in, dispatching value + Enter', async () => {
 		const input = document.createElement('input');
 		stubRect(input, 100, 100, 200, 30);
 		document.body.appendChild(input);
@@ -235,9 +252,27 @@ describe('session', () => {
 		}
 		mockFetch([writeStep(), answerStep()]);
 		session.ask('fill the form');
+		await waitFor(() => session.getState() === 'waiting_user', 3000);
+		session.ui.doIt();
 		await waitFor(() => session.getState() === 'done', 3000);
 		expect(input.value).toBe('Acme Corp');
 		expect(events).toEqual(['input', 'change', 'keydown', 'keyup']);
+	});
+
+	/** The user's own words win: content is a suggestion, not a mandate. */
+	it('never overwrites text the user typed themselves', async () => {
+		const input = document.createElement('input');
+		stubRect(input, 100, 100, 200, 30);
+		document.body.appendChild(input);
+		document.elementFromPoint = () => input;
+		input.value = 'My own description';
+
+		mockFetch([writeStep(), answerStep()]);
+		session.ask('fill the form');
+		await waitFor(() => session.getState() === 'waiting_user', 3000);
+		session.ui.doIt();
+		await waitFor(() => session.getState() === 'done', 3000);
+		expect(input.value).toBe('My own description');
 	});
 
 	it('resumes a persisted cross-page session with user_acted', async () => {
