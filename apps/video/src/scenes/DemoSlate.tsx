@@ -5,7 +5,16 @@
 // — the creator swaps that single element for <OffthreadVideo>.
 
 import React from 'react';
-import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import {
+	AbsoluteFill,
+	getStaticFiles,
+	interpolate,
+	OffthreadVideo,
+	spring,
+	staticFile,
+	useCurrentFrame,
+	useVideoConfig,
+} from 'remotion';
 import { Backdrop } from '../lib/Backdrop';
 import { BrowserChrome } from '../lib/BrowserChrome';
 import { ACCENT, INK, SPRING_SOFT } from '../lib/tokens';
@@ -142,6 +151,15 @@ const SlateContents: React.FC = () => {
 	);
 };
 
+/** public/demo.mov | demo.mp4 → its staticFile URL, else null (slate mode). */
+function demoSrc(): string | null {
+	const files = getStaticFiles();
+	for (const name of ['demo.mov', 'demo.mp4']) {
+		if (files.some((f) => f.name === name)) return staticFile(name);
+	}
+	return null;
+}
+
 export const DemoSlate: React.FC = () => {
 	const frame = useCurrentFrame();
 	const { fps } = useVideoConfig();
@@ -163,7 +181,17 @@ export const DemoSlate: React.FC = () => {
 			<AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
 				<div style={{ transform: `scale(${scale})`, opacity }}>
 					<BrowserChrome width={CHROME_W} height={CHROME_H} url="app.example.com" variant="light">
-						<SlateContents />
+						{/* Real footage when public/demo.mov (or .mp4) exists; the guide
+						    slate otherwise. Drop the file in and re-render — no code
+						    edit needed. */}
+						{demoSrc() !== null ? (
+							<OffthreadVideo
+								src={demoSrc()!}
+								style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+							/>
+						) : (
+							<SlateContents />
+						)}
 					</BrowserChrome>
 				</div>
 			</AbsoluteFill>
