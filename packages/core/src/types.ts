@@ -66,8 +66,6 @@ export interface StepRequest {
 /** Server -> widget. */
 export interface StepResponse {
 	step: Step;
-	/** True when served from fixtures instead of the live model. */
-	fixture: boolean;
 }
 
 export interface HandymanConfig {
@@ -122,8 +120,8 @@ export interface HandymanConfig {
 	 * network surface: a page CSP whose `connect-src` omits api.gradium.ai kills
 	 * a `new WebSocket(...)` opened from the page, so the Chrome extension
 	 * supplies a factory that relays frames to its service worker, which owns
-	 * the real socket. When absent, voice opens the socket directly (embed
-	 * script / bookmarklet).
+	 * the real socket. When absent, voice opens the socket directly (the embed
+	 * script).
 	 *
 	 * Resolves once the socket is OPEN; rejects if it errors or closes first.
 	 * Text frames only — the Gradium protocol is JSON in both directions (audio
@@ -146,7 +144,7 @@ export interface HandymanConfig {
 	 * screenshots + downscales in its service worker (chrome.tabs.captureVisibleTab
 	 * + OffscreenCanvas, neither subject to the page CSP); the page only ever holds
 	 * the resulting string and forwards it to /api/step. When absent, capture uses
-	 * snapdom (embed script / bookmarklet, where we have no extension context).
+	 * snapdom (the embed script, which has no extension context).
 	 *
 	 * `opts` is the CSS viewport ({innerWidth, innerHeight}) the caller wants
 	 * captured. MUST resolve with a JPEG data URI of the CURRENT VIEWPORT that is

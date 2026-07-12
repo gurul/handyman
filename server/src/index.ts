@@ -1,17 +1,15 @@
 // Handyman proxy server: Bun + Hono. Holds the H / Gradium keys; serves the
-// demo app and the built widget; /api/step runs the Holo agent-loop turn.
+// built widget; /api/step runs the Holo agent-loop turn.
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { join, resolve, sep } from 'node:path';
+import { join, resolve } from 'node:path';
 import { config } from './config.ts';
 import { StepError } from './errors.ts';
 import { log } from './logger.ts';
 import { stepRequestSchema } from './schema.ts';
 import { handleStep } from './step.ts';
 
-const DEMO_DIR = resolve(import.meta.dir, '../../apps/demo');
-const BOOKMARKLET_DIR = resolve(import.meta.dir, '../../apps/bookmarklet');
 const WIDGET_DIST = resolve(import.meta.dir, '../../packages/core/dist');
 // tsup emits <entry>.global.js for format iife; entry may be renamed later.
 const WIDGET_CANDIDATES = ['handyman.global.js', 'index.global.js', 'handyman.js'];
@@ -19,16 +17,17 @@ const WIDGET_CANDIDATES = ['handyman.global.js', 'index.global.js', 'handyman.js
 const app = new Hono();
 
 // Private Network Access: a public site (https://…) reaching this loopback
-// proxy (bookmarklet on any site) triggers Chrome's PNA preflight. cors()
-// answers OPTIONS and returns, so stamp the PNA header onto its response
-// afterward — registered before cors() so this wraps it.
+// proxy (the <script> embed, which fetches from the page itself) triggers
+// Chrome's PNA preflight. cors() answers OPTIONS and returns, so stamp the PNA
+// header onto its response afterward — registered before cors() so this wraps
+// it. (The extension is exempt: its fetches come from the service worker.)
 app.use('*', async (c, next) => {
 	const pna = c.req.header('Access-Control-Request-Private-Network') === 'true';
 	await next();
 	if (pna) c.res.headers.set('Access-Control-Allow-Private-Network', 'true');
 });
 
-app.use('*', cors()); // permissive — demo server
+app.use('*', cors()); // permissive — local proxy for whatever site you're on
 
 app.post('/api/step', async (c) => {
 	let body: unknown;
@@ -48,7 +47,6 @@ app.post('/api/step', async (c) => {
 			session_id: parsed.data.session_id,
 			event: parsed.data.event,
 			tool: res.step.tool_call.tool_name,
-			fixture: res.fixture,
 			ms: Date.now() - started,
 		});
 		return c.json(res);
@@ -111,37 +109,9 @@ app.get('/handyman.js', async (c) => {
 	);
 });
 
-// Bookmarklet generator page (zero-install delivery for any site).
-app.get('/embed/bookmarklet', async (c) => {
-	const file = Bun.file(join(BOOKMARKLET_DIR, 'index.html'));
-	if (await file.exists()) {
-		return new Response(file, {
-			headers: { 'content-type': 'text/html; charset=utf-8' },
-		});
-	}
-	return c.text('bookmarklet page not built', 404);
-});
-
-// Demo app static files.
-app.get('*', async (c) => {
-	let pathname = decodeURIComponent(new URL(c.req.url).pathname);
-	if (pathname.endsWith('/')) pathname += 'index.html';
-	const target = resolve(join(DEMO_DIR, pathname));
-	if (target !== DEMO_DIR && !target.startsWith(DEMO_DIR + sep)) {
-		return c.text('Not found', 404);
-	}
-	const candidates = target.includes('.') ? [target] : [target, `${target}.html`];
-	for (const candidate of candidates) {
-		const file = Bun.file(candidate);
-		if (await file.exists()) return new Response(file);
-	}
-	return c.text('Not found', 404);
-});
-
 const server = Bun.serve({ port: config.port, fetch: app.fetch });
 log.info('handyman server listening', {
 	port: server.port,
-	fixtures_mode: config.fixturesMode,
-	record_mode: config.recordMode,
+	model_enabled: Boolean(config.haiApiKey),
 	voice_enabled: Boolean(config.gradiumApiKey),
 });

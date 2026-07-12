@@ -15,8 +15,6 @@ export interface Session {
 	messages: ChatMessage[];
 	/** tool_name of the last step returned, for <tool_output tool="..."> wrappers. */
 	lastToolName: string | null;
-	/** Replay position when serving from fixtures. */
-	fixtureCursor: number;
 	lastAccess: number;
 }
 
@@ -34,7 +32,6 @@ export function getSession(id: string, question: string, fresh: boolean): Sessio
 			question,
 			messages: [],
 			lastToolName: null,
-			fixtureCursor: 0,
 			lastAccess: Date.now(),
 		};
 		sessions.set(id, session);

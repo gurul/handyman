@@ -158,7 +158,7 @@ function afterPaint(): Promise<void> {
  * @param captureScreenshot Optional out-of-page screenshotter (the extension's
  * service-worker bridge). When supplied it REPLACES snapdom entirely — the page
  * never rasterizes or decodes an image, which is the only way to survive a CSP
- * whose `img-src` omits `data:`. When absent (embed script / bookmarklet) the
+ * whose `img-src` omits `data:`. When absent (the embed script) the
  * snapdom path below is used unchanged.
  */
 export async function captureViewport(

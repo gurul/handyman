@@ -82,7 +82,7 @@ export type VoiceSocketFactory = (
 /**
  * Open a voice socket; resolves on open, rejects on error/close before open.
  * Uses `factory` (the extension bridge) when provided; otherwise a direct
- * page WebSocket — the embed script and bookmarklet have no bridge.
+ * page WebSocket — the embed script has no bridge.
  */
 export function openVoiceSocket(
   url: string,

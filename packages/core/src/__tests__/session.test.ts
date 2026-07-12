@@ -60,7 +60,7 @@ function mockFetch(steps: Step[]): { requests: StepRequest[] } {
 		requests.push(JSON.parse(String(init?.body)) as StepRequest);
 		const step = steps[Math.min(i, steps.length - 1)];
 		i += 1;
-		return new Response(JSON.stringify({ step, fixture: false }), {
+		return new Response(JSON.stringify({ step }), {
 			status: 200,
 			headers: { 'content-type': 'application/json' },
 		});

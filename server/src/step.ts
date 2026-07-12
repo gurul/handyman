@@ -1,11 +1,10 @@
 // The /api/step pipeline: H agent-loop message assembly, Holo call with
-// structured outputs, validation with one corrective retry, fixture fallback.
+// structured outputs, validation with one corrective retry.
 
 import OpenAI from 'openai';
 import type { Step, StepRequest, StepResponse } from '../../packages/core/src/types.ts';
 import { config } from './config.ts';
 import { StepError } from './errors.ts';
-import { recordFixture, serveFixtureStep } from './fixtures.ts';
 import { log } from './logger.ts';
 import { stepJsonSchema, stepSchema } from './schema.ts';
 import { getSession, type ChatMessage } from './sessions.ts';
@@ -24,6 +23,12 @@ const MAX_OUTPUT_TOKENS = 512;
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
+	// Fail loudly. A missing key used to silently drop the server into fixture
+	// mode, which serves canned steps — a tour that looks live and never calls
+	// the model is worse than an error.
+	if (!config.haiApiKey) {
+		throw new StepError('HAI_API_KEY is not configured on the server', 503);
+	}
 	if (!client) {
 		client = new OpenAI({
 			baseURL: 'https://api.hcompany.ai/v1/',
@@ -126,11 +131,6 @@ function parseStep(content: string): Step | null {
 export async function handleStep(req: StepRequest): Promise<StepResponse> {
 	const session = getSession(req.session_id, req.question, req.event === 'start');
 
-	if (config.fixturesMode) {
-		const step = await serveFixtureStep(req, session);
-		return { step, fixture: true };
-	}
-
 	if (session.messages.length === 0) {
 		session.messages.push({ role: 'system', content: systemPrompt(req.question) });
 	}
@@ -187,15 +187,5 @@ export async function handleStep(req: StepRequest): Promise<StepResponse> {
 	session.messages.push({ role: 'assistant', content: JSON.stringify(step) });
 	session.lastToolName = step.tool_call.tool_name;
 
-	if (config.recordMode) {
-		try {
-			await recordFixture(req, step);
-		} catch (err) {
-			log.warn('fixture recording failed', {
-				error: err instanceof Error ? err.message : String(err),
-			});
-		}
-	}
-
-	return { step, fixture: false };
+	return { step };
 }

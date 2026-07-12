@@ -2,12 +2,12 @@
  * Site-scout agent provisioning on H Company's Agent Platform (agp).
  *
  * Idempotent create-or-update by name: POST /api/v2/agents, and on 409
- * (agent already exists — see docs/vendor/hai/computer-use-agents/errors.md)
+ * (agent already exists — see https://hub.hcompany.ai/computer-use-agents/errors)
  * fall back to PUT /api/v2/agents/{name}. Nothing here runs at import time;
  * callers invoke `ensureScoutAgents()` explicitly and only when HAI_API_KEY
  * is present (see hasApiKey / router.ts).
  *
- * Patterns follow the vendored hai-agents skill (docs/vendor/hai-skill/SKILL.md):
+ * Patterns follow the hai-agents SDK docs (https://hub.hcompany.ai/computer-use-agents):
  * - auth via the HAI_API_KEY environment variable, consumed by the SDK client
  *   (`new HaiAgentsClient()` attaches it as a Bearer token);
  * - EU region is the client default; HAI_REGION=us opts into the US host;
@@ -55,7 +55,7 @@ let client: HaiAgentsClient | undefined;
 
 /**
  * Shared SDK client. The constructor reads HAI_API_KEY from the environment
- * and defaults to the EU host (docs/vendor/hai/computer-use-agents/sdks.md).
+ * and defaults to the EU host (https://hub.hcompany.ai/computer-use-agents/sdks).
  * Built-in retry: transient errors (408, 429, 5xx) are retried twice with
  * backoff by the SDK itself.
  */

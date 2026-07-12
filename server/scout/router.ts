@@ -8,7 +8,7 @@
  * Degrades gracefully without HAI_API_KEY: every route returns 503 with a
  * clear message, and no SDK call (or agent provisioning) ever happens.
  *
- * Per the vendored hai-agents skill (docs/vendor/hai-skill/SKILL.md):
+ * Per the hai-agents SDK docs (https://hub.hcompany.ai/computer-use-agents):
  * - the task travels in `messages` (the manager's instructions are persona only);
  * - the Agent View link is built deterministically from the session id and
  *   surfaced immediately, so callers can watch the run live;
