@@ -420,8 +420,14 @@ export function init(config: HandymanConfig): void {
 				e.stopPropagation();
 				toggleListening();
 			};
-			document.addEventListener('keydown', onKeyDown, true);
-			removeHotkey = () => document.removeEventListener('keydown', onKeyDown, true);
+			// Must be on WINDOW, not document: the FAB's key-containment listener
+			// (fab.ts onWidgetKey) is a window-capture handler that stopPropagation()s
+			// every key typed inside the widget, so a document-level listener never
+			// hears the hotkey while the ask input is focused — the exact input whose
+			// placeholder advertises it. stopPropagation doesn't silence other
+			// listeners on the SAME target, so a window-capture listener still runs.
+			window.addEventListener('keydown', onKeyDown, true);
+			removeHotkey = () => window.removeEventListener('keydown', onKeyDown, true);
 			// Advertise the hotkey only now that it actually works — a failed
 			// voice load must not leave a dead "(Alt+H to speak)" promise around.
 			fab.setHotkeyLabel(
