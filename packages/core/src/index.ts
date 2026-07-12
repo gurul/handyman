@@ -4,7 +4,7 @@
 import type { HandymanConfig } from './types.ts';
 import { createOverlay } from './overlay.ts';
 import { createPointer } from './pointer.ts';
-import { createFab } from './fab.ts';
+import { createFab, FAB_SIZE } from './fab.ts';
 import { captureViewport } from './capture.ts';
 import { createSession, type SessionHandle } from './session.ts';
 import { ensureBrandFont } from './fonts.ts';
@@ -213,6 +213,31 @@ export function init(config: HandymanConfig): void {
 		fab.setBuddyOut(true);
 	}
 
+	/** While the mic is live the buddy points at the pulsing launcher instead
+	 *  of trailing the mouse — the answer to "I pressed the hotkey, now what?"
+	 *  is drawn on screen: the hand points at the thing that's listening. */
+	function pointBuddyAtLauncher(): void {
+		const s = session.getState();
+		if (s !== 'idle' && s !== 'done') return; // tour guidance outranks buddy
+		const c = fab.center();
+		pointer.show();
+		pointer.pointTo(
+			{ left: c.x - FAB_SIZE / 2, top: c.y - FAB_SIZE / 2, width: FAB_SIZE, height: FAB_SIZE },
+			'left',
+		);
+		fab.setBuddyOut(true);
+		buddyOut = true;
+	}
+
+	/** Listening ended without a question: stop pointing at the launcher and
+	 *  fall back to trailing the mouse (the pre-existing cancel behavior). */
+	function resumeBuddyFollow(): void {
+		const s = session.getState();
+		if (s !== 'idle' && s !== 'done') return;
+		if (!buddyOut) return;
+		pointer.startFollow();
+	}
+
 	const fab = createFab({
 		zIndex: z,
 		onFabPress: () => {
@@ -333,9 +358,11 @@ export function init(config: HandymanConfig): void {
 			// Reached only from the mic click or the hotkey — both user gestures —
 			// so unlock the AudioContext for the answer narration that follows.
 			tts?.unlock();
-			// The buddy pops out while we listen, signalling "I'm listening".
-			// Escape-cancel leaves it out (the user can click it home).
-			summonBuddy();
+			// The buddy points at the pulsing launcher while we listen, and the
+			// pill says what to do — the hotkey otherwise gives no clue that the
+			// next move is simply to talk.
+			pointBuddyAtLauncher();
+			fab.setWorking('Listening — ask out loud');
 			listening = true;
 			fab.setListening(true);
 			voice!
@@ -351,7 +378,11 @@ export function init(config: HandymanConfig): void {
 							fab.closePanel();
 							if (text) {
 								markBuddyOut();
+								// session.ask flips the pill to "Analyzing…" synchronously.
 								session.ask(text);
+							} else {
+								fab.setWorking(null);
+								resumeBuddyFollow();
 							}
 						},
 						// Mid-utterance death (socket dropped, server error frame).
@@ -360,6 +391,8 @@ export function init(config: HandymanConfig): void {
 							listening = false;
 							sttHandle = null;
 							fab.setListening(false);
+							fab.setWorking(null);
+							resumeBuddyFollow();
 							listenFailed(err);
 						},
 					},
@@ -376,6 +409,8 @@ export function init(config: HandymanConfig): void {
 					listening = false;
 					sttHandle = null;
 					fab.setListening(false);
+					fab.setWorking(null);
+					resumeBuddyFollow();
 					listenFailed(err);
 				});
 		}
@@ -384,6 +419,8 @@ export function init(config: HandymanConfig): void {
 			if (!listening) return;
 			listening = false;
 			fab.setListening(false);
+			fab.setWorking(null);
+			resumeBuddyFollow();
 			sttHandle?.stop();
 			sttHandle = null;
 		}
