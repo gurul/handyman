@@ -11,11 +11,22 @@ import { stepRequestSchema } from './schema.ts';
 import { handleStep } from './step.ts';
 
 const DEMO_DIR = resolve(import.meta.dir, '../../apps/demo');
+const BOOKMARKLET_DIR = resolve(import.meta.dir, '../../apps/bookmarklet');
 const WIDGET_DIST = resolve(import.meta.dir, '../../packages/core/dist');
 // tsup emits <entry>.global.js for format iife; entry may be renamed later.
 const WIDGET_CANDIDATES = ['handyman.global.js', 'index.global.js', 'handyman.js'];
 
 const app = new Hono();
+
+// Private Network Access: a public site (https://…) reaching this loopback
+// proxy (bookmarklet on any site) triggers Chrome's PNA preflight. cors()
+// answers OPTIONS and returns, so stamp the PNA header onto its response
+// afterward — registered before cors() so this wraps it.
+app.use('*', async (c, next) => {
+	const pna = c.req.header('Access-Control-Request-Private-Network') === 'true';
+	await next();
+	if (pna) c.res.headers.set('Access-Control-Allow-Private-Network', 'true');
+});
 
 app.use('*', cors()); // permissive — demo server
 
@@ -98,6 +109,17 @@ app.get('/handyman.js', async (c) => {
 		{ error: 'widget bundle not built — run `bun run build` in packages/core' },
 		404,
 	);
+});
+
+// Bookmarklet generator page (zero-install delivery for any site).
+app.get('/embed/bookmarklet', async (c) => {
+	const file = Bun.file(join(BOOKMARKLET_DIR, 'index.html'));
+	if (await file.exists()) {
+		return new Response(file, {
+			headers: { 'content-type': 'text/html; charset=utf-8' },
+		});
+	}
+	return c.text('bookmarklet page not built', 404);
 });
 
 // Demo app static files.

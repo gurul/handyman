@@ -6,10 +6,22 @@ Ask any website "how do I …?" — an animated pointer shows you, step by step,
 
 Built for the Computer Use Hackathon — Track 2 (Browser Use) + Voice challenge.
 
+Three ways to put it on a page:
+
 ```html
+<!-- 1. Embed (a site you own) -->
 <script src="/handyman.js"></script>
 <script>Handyman.init({ endpoint: "/api" })</script>
 ```
+
+- **2. Bookmarklet** (any lenient site, zero install): open `/embed/bookmarklet`,
+  drag the button to your bookmarks bar, click it on any page.
+- **3. Chrome extension** (every site, including strict-CSP ones): load
+  `apps/extension/dist` unpacked. Its content script relays the widget's network
+  through the isolated world, so a page's `connect-src` CSP can't block it.
+
+The widget mounts inside Shadow DOM, so host-page CSS can't deform it and its own
+styles never leak out.
 
 ## How it works
 

@@ -5,6 +5,12 @@ import { createOverlay, type OverlayHandle } from '../overlay.ts';
 import { createPointer, type PointerHandle } from '../pointer.ts';
 import { createSession, type SessionHandle } from '../session.ts';
 
+/** Overlay markup now lives inside a shadow root; query through it. */
+function q<T extends Element = HTMLElement>(sel: string): T {
+	const host = document.querySelector('[data-handyman="overlay"]')!;
+	return host.shadowRoot!.querySelector(sel) as unknown as T;
+}
+
 const ENDPOINT = 'http://api.test/api';
 const TIMINGS = { settleQuiet: 5, settleFloor: 1, settleCap: 50, glideMs: 1 };
 
@@ -140,7 +146,7 @@ describe('session', () => {
 		const { requests } = mockFetch([pointStep(), answerStep()]);
 		session.ask('how?');
 		await waitFor(() => session.getState() === 'waiting_user');
-		(document.querySelector('[data-handyman-btn="next"]') as HTMLElement).click();
+		(q('[data-handyman-btn="next"]') as HTMLElement).click();
 		await waitFor(() => session.getState() === 'done');
 		expect(requests[1]!.event).toBe('user_acted');
 	});
@@ -149,7 +155,7 @@ describe('session', () => {
 		const { requests } = mockFetch([pointStep(), answerStep()]);
 		session.ask('how?');
 		await waitFor(() => session.getState() === 'waiting_user');
-		(document.querySelector('[data-handyman-btn="skip"]') as HTMLElement).click();
+		(q('[data-handyman-btn="skip"]') as HTMLElement).click();
 		expect(session.getState()).toBe('done');
 		expect(sessionStorage.getItem('handyman:session')).toBeNull();
 		await new Promise((r) => setTimeout(r, 30));

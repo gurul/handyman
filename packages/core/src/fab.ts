@@ -15,6 +15,15 @@ export interface FabHandle {
 const FAB_SIZE = 56;
 
 const FAB_CSS = `
+:host {
+	/* Explicit font baseline + box reset so the FAB and ask-panel input/buttons
+	   never inherit the third-party host page's form resets or typography. */
+	font-family: var(--handyman-font, system-ui, sans-serif);
+	font-size: 13px;
+	line-height: 1.4;
+	font-weight: 400;
+}
+*, *::before, *::after { box-sizing: border-box; }
 .handyman-fab {
 	position: fixed;
 	right: 20px;
@@ -85,10 +94,13 @@ export function createFab(opts: {
 }): FabHandle {
 	const root = document.createElement('div');
 	root.setAttribute('data-handyman', 'fab');
+	// Shadow-isolate the FAB + ask panel from host-page CSS; host div stays in
+	// the light DOM carrying [data-handyman] for snapdom exclusion.
+	const shadow = root.attachShadow({ mode: 'open' });
 
 	const style = document.createElement('style');
 	style.textContent = FAB_CSS;
-	root.appendChild(style);
+	shadow.appendChild(style);
 
 	const fab = document.createElement('button');
 	fab.type = 'button';
@@ -96,7 +108,7 @@ export function createFab(opts: {
 	fab.setAttribute('aria-label', 'Ask Handyman');
 	fab.style.zIndex = String(opts.zIndex);
 	fab.innerHTML = POINTER_SVG;
-	root.appendChild(fab);
+	shadow.appendChild(fab);
 
 	const panel = document.createElement('form');
 	panel.className = 'handyman-ask';
@@ -123,7 +135,7 @@ export function createFab(opts: {
 	panel.appendChild(input);
 	panel.appendChild(micBtn);
 	panel.appendChild(submitBtn);
-	root.appendChild(panel);
+	shadow.appendChild(panel);
 	document.body.appendChild(root);
 
 	let micHandler: (() => void) | null = null;

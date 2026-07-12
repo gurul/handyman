@@ -71,7 +71,8 @@ export interface StepResponse {
 }
 
 export interface HandymanConfig {
-	/** Proxy base, e.g. "http://localhost:3000/api". */
+	/** Proxy base, absolute for third-party sites, e.g.
+	 *  "https://handyman.example/api" or "http://localhost:3000/api". */
 	endpoint: string;
 	/** Enable Gradium TTS narration. Default true when voice-token works. */
 	tts?: boolean;
@@ -81,4 +82,16 @@ export interface HandymanConfig {
 	zIndex?: number;
 	/** Storage key prefix. Default "handyman". */
 	storagePrefix?: string;
+	/**
+	 * Network transport override. When set, ALL proxy calls (step,
+	 * voice-token) go through this instead of `fetch(endpoint + path)`.
+	 * The Chrome extension supplies one that relays the request to its
+	 * content script, so requests bypass the host page's CSP `connect-src`.
+	 * `path` is proxy-relative and leads with a slash, e.g. "/step".
+	 * Must resolve with the parsed JSON body or reject on HTTP error.
+	 */
+	transport?: (
+		path: string,
+		init: { method: 'GET' | 'POST'; body?: unknown },
+	) => Promise<unknown>;
 }

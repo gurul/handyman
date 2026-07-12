@@ -102,6 +102,17 @@ function cardPlacement(cut: CutBox, side: Side): { left: number; top: number } {
 }
 
 const OVERLAY_CSS = `
+:host {
+	/* Host stays click-through; the scrim panels below re-enable pointer-events
+	   so the cutout gap passes clicks to the page beneath. Explicit font/box
+	   baseline so nothing inherits from the third-party host page. */
+	pointer-events: none;
+	font-family: var(--handyman-font, system-ui, sans-serif);
+	font-size: 13px;
+	line-height: 1.4;
+	font-weight: 400;
+}
+*, *::before, *::after { box-sizing: border-box; }
 .handyman-panel {
 	position: fixed;
 	background: transparent;
@@ -182,10 +193,15 @@ export function createOverlay(opts: {
 	const { zIndex, callbacks } = opts;
 	const root = document.createElement('div');
 	root.setAttribute('data-handyman', 'overlay');
+	// All markup lives inside a shadow root so the host page's CSS can't deform
+	// the card/spotlight and our styles can't leak out. The host element itself
+	// stays in the light DOM carrying [data-handyman] (snapdom exclusion + the
+	// capture-phase key handlers key on the document).
+	const shadow = root.attachShadow({ mode: 'open' });
 
 	const style = document.createElement('style');
 	style.textContent = OVERLAY_CSS;
-	root.appendChild(style);
+	shadow.appendChild(style);
 
 	// 4 transparent click-eater panels around the cutout. The visual dim
 	// comes from the spotlight's giant box-shadow, so the panels stay
@@ -199,7 +215,7 @@ export function createOverlay(opts: {
 			e.preventDefault();
 			e.stopPropagation();
 		});
-		root.appendChild(p);
+		shadow.appendChild(p);
 		return p;
 	});
 
@@ -207,7 +223,7 @@ export function createOverlay(opts: {
 	spotlight.className = 'handyman-spotlight';
 	spotlight.setAttribute('aria-hidden', 'true');
 	spotlight.style.zIndex = String(zIndex + 1);
-	root.appendChild(spotlight);
+	shadow.appendChild(spotlight);
 
 	const card = document.createElement('div');
 	card.className = 'handyman-card';
@@ -265,7 +281,7 @@ export function createOverlay(opts: {
 	card.appendChild(counterEl);
 	card.appendChild(textEl);
 	card.appendChild(row);
-	root.appendChild(card);
+	shadow.appendChild(card);
 
 	document.body.appendChild(root);
 
@@ -382,8 +398,9 @@ export function createOverlay(opts: {
 		}
 		if (e.key === 'Enter') {
 			// If one of our buttons is focused, let its native click fire
-			// instead of double-advancing.
-			const active = document.activeElement;
+			// instead of double-advancing. Focus lives inside the shadow root,
+			// so document.activeElement is the host — read the shadow's.
+			const active = shadow.activeElement;
 			if (active instanceof HTMLButtonElement && active.dataset.handymanBtn) {
 				return;
 			}

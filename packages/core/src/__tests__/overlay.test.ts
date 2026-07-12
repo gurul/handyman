@@ -2,6 +2,12 @@ import { stubRect } from './setup.ts';
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { createOverlay, type OverlayHandle } from '../overlay.ts';
 
+/** Overlay markup now lives inside a shadow root; query through it. */
+function q<T extends Element = HTMLElement>(sel: string): T {
+	const host = document.querySelector('[data-handyman="overlay"]')!;
+	return host.shadowRoot!.querySelector(sel) as unknown as T;
+}
+
 function makeCallbacks() {
 	return {
 		onNext: mock(() => {}),
@@ -44,7 +50,7 @@ describe('overlay', () => {
 
 	it('renders instruction, counter, and buttons', () => {
 		show();
-		const card = document.querySelector('.handyman-card')!;
+		const card = q('.handyman-card');
 		expect(card.textContent).toContain('Click the Save button');
 		expect(card.textContent).toContain('Step 1');
 		expect(card.textContent).toContain('Skip');
@@ -54,13 +60,13 @@ describe('overlay', () => {
 
 	it('Skip button fires onSkip', () => {
 		show();
-		(document.querySelector('[data-handyman-btn="skip"]') as HTMLElement).click();
+		(q('[data-handyman-btn="skip"]') as HTMLElement).click();
 		expect(cb.onSkip).toHaveBeenCalledTimes(1);
 	});
 
 	it('Do it for me fires onDoIt and marks pressed', () => {
 		show();
-		const btn = document.querySelector('[data-handyman-btn="doit"]') as HTMLElement;
+		const btn = q('[data-handyman-btn="doit"]') as HTMLElement;
 		btn.click();
 		expect(cb.onDoIt).toHaveBeenCalledTimes(1);
 		expect(btn.getAttribute('aria-pressed')).toBe('true');
@@ -98,7 +104,7 @@ describe('overlay', () => {
 
 	it('Enter on a tour button defers to the native click', () => {
 		show();
-		const skip = document.querySelector('[data-handyman-btn="skip"]') as HTMLButtonElement;
+		const skip = q('[data-handyman-btn="skip"]') as HTMLButtonElement;
 		skip.focus();
 		document.body.dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
@@ -110,7 +116,7 @@ describe('overlay', () => {
 		show();
 		// rect 100,100 200x100 + 8px pad → cut 92,92 216x116.
 		const panel = (name: string) =>
-			document.querySelector(`[data-handyman-panel="${name}"]`) as HTMLElement;
+			q(`[data-handyman-panel="${name}"]`) as HTMLElement;
 		expect(panel('top').style.height).toBe('92px');
 		expect(panel('bottom').style.top).toBe('208px');
 		expect(panel('left').style.width).toBe('92px');
@@ -133,11 +139,11 @@ describe('overlay', () => {
 		show();
 		const onDone = mock(() => {});
 		overlay.showAnswer('All set. Invoice created.', onDone);
-		const card = document.querySelector('.handyman-card')!;
+		const card = q('.handyman-card');
 		expect(card.textContent).toContain('All set. Invoice created.');
-		const spotlight = document.querySelector('.handyman-spotlight') as HTMLElement;
+		const spotlight = q('.handyman-spotlight') as HTMLElement;
 		expect(spotlight.style.display).toBe('none');
-		(document.querySelector('[data-handyman-btn="next"]') as HTMLElement).click();
+		(q('[data-handyman-btn="next"]') as HTMLElement).click();
 		expect(onDone).toHaveBeenCalledTimes(1);
 	});
 });

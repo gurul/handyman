@@ -39,7 +39,7 @@ const SIDE_ROT: Record<Side, number> = {
 };
 
 const POINTER_CSS = `
-.handyman-pointer {
+:host {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -64,7 +64,7 @@ const POINTER_CSS = `
 	50% { transform: scale(0.8); }
 }
 @media (prefers-reduced-motion: reduce) {
-	.handyman-pointer { transition-duration: 0ms !important; }
+	:host { transition-duration: 0ms !important; }
 	.handyman-pointer__bob, .handyman-pointer__bob--press { animation: none !important; }
 }
 `;
@@ -75,15 +75,18 @@ export function createPointer(opts: { zIndex: number }): PointerHandle {
 	wrap.setAttribute('data-handyman', 'pointer');
 	wrap.setAttribute('aria-hidden', 'true');
 	wrap.style.zIndex = String(opts.zIndex);
+	// Shadow-isolate so host CSS can't restyle the arrow; the host div keeps
+	// [data-handyman] + the glide transform (styled via :host in POINTER_CSS).
+	const shadow = wrap.attachShadow({ mode: 'open' });
 
 	const style = document.createElement('style');
 	style.textContent = POINTER_CSS;
-	wrap.appendChild(style);
+	shadow.appendChild(style);
 
 	const bob = document.createElement('div');
 	bob.className = 'handyman-pointer__bob';
 	bob.innerHTML = POINTER_SVG;
-	wrap.appendChild(bob);
+	shadow.appendChild(bob);
 
 	document.body.appendChild(wrap);
 	wrap.style.display = 'none';

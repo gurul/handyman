@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Handyman</title>
+		<style>
+			:root {
+				color-scheme: light dark;
+				--fg: #1a1a2e;
+				--muted: #6b7280;
+				--accent: #4f46e5;
+				--border: #e5e7eb;
+				--bg: #ffffff;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--fg: #e5e7eb;
+					--muted: #9ca3af;
+					--accent: #818cf8;
+					--border: #374151;
+					--bg: #1a1a2e;
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				width: 300px;
+				padding: 16px;
+				font: 13px/1.4 system-ui, -apple-system, Segoe UI, sans-serif;
+				color: var(--fg);
+				background: var(--bg);
+			}
+			h1 {
+				margin: 0 0 12px;
+				font-size: 15px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			h1 .dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 3px;
+				background: var(--accent);
+			}
+			label {
+				display: block;
+				margin: 12px 0 4px;
+				font-weight: 600;
+			}
+			input[type='text'] {
+				width: 100%;
+				padding: 7px 8px;
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				font: inherit;
+				color: var(--fg);
+				background: transparent;
+			}
+			.row {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin: 10px 0;
+				font-weight: 500;
+			}
+			.row label {
+				margin: 0;
+				font-weight: 500;
+			}
+			.hint {
+				color: var(--muted);
+				font-size: 11px;
+				margin-top: 4px;
+			}
+			button {
+				margin-top: 16px;
+				width: 100%;
+				padding: 9px;
+				border: 0;
+				border-radius: 6px;
+				background: var(--accent);
+				color: #fff;
+				font: inherit;
+				font-weight: 600;
+				cursor: pointer;
+			}
+			button:disabled {
+				opacity: 0.6;
+				cursor: default;
+			}
+			#status {
+				margin-top: 8px;
+				min-height: 14px;
+				font-size: 11px;
+				color: var(--muted);
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<h1><span class="dot"></span>Handyman</h1>
+
+		<div class="row">
+			<input type="checkbox" id="site-enabled" />
+			<label for="site-enabled">Enabled on <span id="origin">this site</span></label>
+		</div>
+
+		<label for="endpoint">Proxy endpoint</label>
+		<input type="text" id="endpoint" placeholder="http://localhost:3000/api" />
+		<div class="hint">Absolute proxy base URL. Path is appended (e.g. /step).</div>
+
+		<div class="row">
+			<input type="checkbox" id="tts" />
+			<label for="tts">Voice narration (TTS)</label>
+		</div>
+		<div class="row">
+			<input type="checkbox" id="stt" />
+			<label for="stt">Ask by voice (STT)</label>
+		</div>
+
+		<button id="save">Save &amp; reload tab</button>
+		<div id="status"></div>
+
+		<script src="popup.js"></script>
+	</body>
+</html>

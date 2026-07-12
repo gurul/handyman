@@ -111,6 +111,39 @@ function sessionKey(prefix: string): string {
 	return `${prefix}:session`;
 }
 
+interface TransportInit {
+	method: 'GET' | 'POST';
+	body?: unknown;
+}
+
+/** Default transport: fetch against `endpoint + path`, returns parsed JSON. */
+async function fetchTransport(
+	endpoint: string,
+	path: string,
+	init: TransportInit,
+): Promise<unknown> {
+	const res = await fetch(`${endpoint}${path}`, {
+		method: init.method,
+		headers: init.body === undefined ? undefined : { 'content-type': 'application/json' },
+		body: init.body === undefined ? undefined : JSON.stringify(init.body),
+	});
+	if (!res.ok) throw new Error(`handyman: ${path} ${res.status}`);
+	return res.json();
+}
+
+/** Narrow an unknown transport payload to StepResponse before use. */
+function asStepResponse(raw: unknown): StepResponse {
+	if (
+		typeof raw !== 'object' ||
+		raw === null ||
+		typeof (raw as { step?: unknown }).step !== 'object' ||
+		(raw as { step?: unknown }).step === null
+	) {
+		throw new Error('handyman: malformed /step response');
+	}
+	return raw as StepResponse;
+}
+
 function cacheKey(prefix: string, originPath: string, question: string): string {
 	return `${prefix}:cache:v1:${originPath}:${question}`;
 }
@@ -153,16 +186,42 @@ function labelOf(el: Element): string {
 		.toLowerCase();
 }
 
-function findByDescription(desc: string, editableOnly = false): Element | null {
+// Generic words carry no disambiguating signal — a description of "the Add to
+// cart button" and six "Add … to cart" buttons only differ by the product noun.
+const STOP_WORDS = new Set([
+	'the', 'a', 'an', 'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'with',
+	'button', 'link', 'icon', 'field', 'input', 'box', 'menu', 'item', 'option',
+	'click', 'select', 'choose', 'press', 'tap', 'open', 'go', 'your', 'you',
+	'this', 'that', 'it', 'into', 'under', 'above', 'below', 'next', 'top',
+	'bottom', 'left', 'right', 'corner', 'page', 'section', 'primary', 'please',
+	'named', 'labeled', 'labelled', 'called', 'product', 'element',
+]);
+
+function meaningfulTokens(s: string): string[] {
+	return (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+		(w) => w.length > 1 && !STOP_WORDS.has(w),
+	);
+}
+
+/**
+ * Resolve a model element description to a real interactive element. Priority:
+ *   1. a quoted label the description names verbatim ("the 'New Invoice' button")
+ *   2. the element sharing the most meaningful tokens with the description —
+ *      this is what disambiguates one "Add … to cart" among many by the product
+ *      noun when the coordinate hit landed on a non-interactive sibling.
+ *   3. a plain substring match either direction (last resort).
+ */
+export function findByDescription(desc: string, editableOnly = false): Element | null {
 	const needle = desc.trim().toLowerCase();
 	if (needle.length === 0) return null;
-	// Model descriptions usually quote the visible label: "The 'New Invoice'
-	// primary button…" — quoted phrases are the strongest match signal.
 	const quoted = [...desc.matchAll(/['"‘“]([^'"’”]{2,60})['"’”]/g)].map((m) =>
 		(m[1] ?? '').trim().toLowerCase(),
 	);
+	const descTokens = new Set(meaningfulTokens(desc));
 	const query = editableOnly ? EDITABLE_QUERY : DESCRIPTION_QUERY;
-	let fallback: Element | null = null;
+	let best: Element | null = null;
+	let bestScore = 0;
+	let substring: Element | null = null;
 	for (const el of document.querySelectorAll(query)) {
 		if (el.closest('[data-handyman]') !== null) continue;
 		if (editableOnly && !isEditable(el)) continue;
@@ -171,11 +230,20 @@ function findByDescription(desc: string, editableOnly = false): Element | null {
 		if (quoted.some((q) => q.length > 0 && (label.includes(q) || q.includes(label)))) {
 			return el;
 		}
-		if (fallback === null && (label.includes(needle) || needle.includes(label))) {
-			fallback = el;
+		let score = 0;
+		for (const t of new Set(meaningfulTokens(label))) if (descTokens.has(t)) score++;
+		if (score > bestScore) {
+			bestScore = score;
+			best = el;
+		}
+		if (substring === null && (label.includes(needle) || needle.includes(label))) {
+			substring = el;
 		}
 	}
-	return fallback;
+	// Two shared meaningful tokens is a confident match; one is too weak to trust
+	// over the substring signal.
+	if (bestScore >= 2) return best;
+	return substring;
 }
 
 /** React & co. track the value via a property descriptor; write through the
@@ -218,6 +286,14 @@ export function createSession(deps: SessionDeps): SessionHandle {
 	function setState(s: SessionState): void {
 		state = s;
 		cb.onStateChange?.(s);
+	}
+
+	/** Route a proxy call through config.transport when provided (the extension
+	 *  relays it past the host page's CSP), else the default fetch. */
+	function callProxy(path: string, init: TransportInit): Promise<unknown> {
+		return config.transport
+			? config.transport(path, init)
+			: fetchTransport(config.endpoint, path, init);
 	}
 
 	function persist(): void {
@@ -369,14 +445,7 @@ export function createSession(deps: SessionDeps): SessionHandle {
 				event,
 				url: location.href,
 			};
-			const res = await fetch(`${config.endpoint}/step`, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify(body),
-			});
-			if (myGen !== gen) return;
-			if (!res.ok) throw new Error(`handyman: /step ${res.status}`);
-			const { step } = (await res.json()) as StepResponse;
+			const { step } = asStepResponse(await callProxy('/step', { method: 'POST', body }));
 			if (myGen !== gen) return;
 			recorded.push(step);
 			handleStep(step, myGen);
