@@ -1,0 +1,125 @@
+# H Tech Hub
+
+## Docs
+
+- [About the Models API](https://hub.hcompany.ai/about-the-models-api.md): OpenAI-compatible access to the Holo Vision-Language Models for computer use.
+- [Agent loop](https://hub.hcompany.ai/agent-loop.md)
+- [API reference](https://hub.hcompany.ai/api-reference.md): Endpoint, authentication, conventions, and the Holo-specific request surface.
+- [Create an agent](https://hub.hcompany.ai/computer-use-agents/agents/create.md): Create a reusable agent in your own catalog.
+- [Delete an agent](https://hub.hcompany.ai/computer-use-agents/agents/delete.md): Remove an agent from your catalog.
+- [List agents](https://hub.hcompany.ai/computer-use-agents/agents/list.md): Discover available agents from your catalog and the H preset catalog.
+- [Agents](https://hub.hcompany.ai/computer-use-agents/agents/overview.md): An agent is a reusable configuration that defines what an AI agent can do.
+- [Patch an agent](https://hub.hcompany.ai/computer-use-agents/agents/patch.md): Change individual fields of an agent without resending the full object.
+- [Retrieve an agent](https://hub.hcompany.ai/computer-use-agents/agents/retrieve.md): Get the full specification of a single agent.
+- [Update an agent](https://hub.hcompany.ai/computer-use-agents/agents/update.md): Replace the configuration of an agent in your catalog.
+- [Complete a profile upload](https://hub.hcompany.ai/computer-use-agents/browser-profiles/complete-upload.md): Finalize a browser profile after its archive is uploaded.
+- [Delete a browser profile](https://hub.hcompany.ai/computer-use-agents/browser-profiles/delete.md): Remove a browser profile.
+- [Get the default browser profile](https://hub.hcompany.ai/computer-use-agents/browser-profiles/get-default.md): Fetch your default profile for a browser.
+- [Initiate a profile upload](https://hub.hcompany.ai/computer-use-agents/browser-profiles/initiate-upload.md): Get a presigned URL to upload a browser profile archive.
+- [List browser profiles](https://hub.hcompany.ai/computer-use-agents/browser-profiles/list.md): Browse your organization's browser profiles.
+- [Retrieve a browser profile](https://hub.hcompany.ai/computer-use-agents/browser-profiles/retrieve.md): Fetch a browser profile by id.
+- [Set the default browser profile](https://hub.hcompany.ai/computer-use-agents/browser-profiles/set-default.md): Mark a profile as your default for its browser.
+- [Unset the default browser profile](https://hub.hcompany.ai/computer-use-agents/browser-profiles/unset-default.md): Clear the default flag on a profile.
+- [Configure the browser](https://hub.hcompany.ai/computer-use-agents/browser/configuration.md): Define a Browser environment: its fields, modes, and actions.
+- [Run the agent in your own browser](https://hub.hcompany.ai/computer-use-agents/browser/local-control.md): Let an agent drive Chrome on your own machine.
+- [Bring your own browser profile](https://hub.hcompany.ai/computer-use-agents/browser/profiles.md): Start a browser session from saved cookies and storage.
+- [Route the browser through a proxy](https://hub.hcompany.ai/computer-use-agents/browser/proxy.md): Egress the browser through an H-managed proxy or one you operate.
+- [Changelog](https://hub.hcompany.ai/computer-use-agents/changelog.md): Notable changes to the Computer-Use Agents API and SDKs.
+- [Build with coding assistants](https://hub.hcompany.ai/computer-use-agents/coding-skills.md): Install the hai-agents skill so Claude Code, Cursor, and other assistants know the H APIs and help you build use cases.
+- [Give an agent custom tools](https://hub.hcompany.ai/computer-use-agents/custom-tools.md): Extend the agent's toolbox with functions from your own code: the agent calls them, the SDK executes them, the run continues with the result.
+- [Run the agent on your own desktop](https://hub.hcompany.ai/computer-use-agents/desktop/local-control.md): Let an agent drive the mouse, keyboard, and screen on your own machine.
+- [Create an environment](https://hub.hcompany.ai/computer-use-agents/environments/create.md): Create a reusable environment in your own catalog.
+- [Delete an environment](https://hub.hcompany.ai/computer-use-agents/environments/delete.md): Remove an environment from your catalog.
+- [List environments](https://hub.hcompany.ai/computer-use-agents/environments/list.md): Discover available environments.
+- [Environments](https://hub.hcompany.ai/computer-use-agents/environments/overview.md): The surfaces an agent perceives and acts upon.
+- [Patch an environment](https://hub.hcompany.ai/computer-use-agents/environments/patch.md): Change individual fields of an environment without resending the full spec.
+- [Retrieve an environment](https://hub.hcompany.ai/computer-use-agents/environments/retrieve.md): Get the full specification of an environment.
+- [Update an environment](https://hub.hcompany.ai/computer-use-agents/environments/update.md): Replace the configuration of an environment in your catalog.
+- [Handle API errors](https://hub.hcompany.ai/computer-use-agents/errors.md): How Computer-Use Agents report errors, and what to do about them.
+- [Computer-Use Agents](https://hub.hcompany.ai/computer-use-agents/introduction.md): Launch your first computer-use agent.
+- [Run agents over MCP](https://hub.hcompany.ai/computer-use-agents/mcp.md): Run and manage H agents from any MCP host, no HTTP or SDK code.
+- [Parallelize work with subagents](https://hub.hcompany.ai/computer-use-agents/multi-agent.md): Let one manager agent split a task and delegate the pieces to specialist subagents.
+- [Run agents from n8n](https://hub.hcompany.ai/computer-use-agents/n8n.md): Run Computer-Use Agents from an n8n workflow over plain HTTP.
+- [Watch and steer sessions](https://hub.hcompany.ai/computer-use-agents/observe-and-steer.md): Watch a run, intervene while it works, keep the conversation going, and read how it ended.
+- [Plans and limits](https://hub.hcompany.ai/computer-use-agents/plans-and-limits.md): Plans, token and concurrency allowances, and how to manage your subscription.
+- [Quickstart](https://hub.hcompany.ai/computer-use-agents/quickstart.md): Create your first agent session in under 5 minutes.
+- [Create a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/create.md): Register a cron schedule that starts a session on each fire.
+- [Delete a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/delete.md): Remove a schedule and stop future fires.
+- [List schedules](https://hub.hcompany.ai/computer-use-agents/schedules/list.md): Browse your organization's schedules.
+- [Run sessions on a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/overview.md): Run a session on a recurring cron cadence.
+- [Pause a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/pause.md): Stop future fires without deleting the schedule.
+- [Resume a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/resume.md): Restart a paused schedule.
+- [Retrieve a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/retrieve.md): Fetch a schedule by id.
+- [List schedule runs](https://hub.hcompany.ai/computer-use-agents/schedules/runs.md): Browse a schedule's fire history.
+- [Trigger a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/trigger.md): Fire a schedule once, immediately.
+- [Update a schedule](https://hub.hcompany.ai/computer-use-agents/schedules/update.md): Change a schedule's name, timing, or session template.
+- [Build with the SDKs](https://hub.hcompany.ai/computer-use-agents/sdks.md): Typed Python and TypeScript clients, plus the CLI.
+- [Cancel a session](https://hub.hcompany.ai/computer-use-agents/sessions/cancel.md): Stop a running session.
+- [Get session changes](https://hub.hcompany.ai/computer-use-agents/sessions/changes.md): Long-poll for real-time session updates.
+- [Create a session](https://hub.hcompany.ai/computer-use-agents/sessions/create.md): Launch a new agent run.
+- [List events](https://hub.hcompany.ai/computer-use-agents/sessions/events.md): Paginated list of session events.
+- [Session feedback](https://hub.hcompany.ai/computer-use-agents/sessions/feedback.md): Submit feedback on a session or individual event.
+- [Force an answer](https://hub.hcompany.ai/computer-use-agents/sessions/force-answer.md): Ask the agent to emit a final answer on its next step.
+- [List sessions](https://hub.hcompany.ai/computer-use-agents/sessions/list.md): Browse your sessions with filtering, sorting, and pagination.
+- [Sessions](https://hub.hcompany.ai/computer-use-agents/sessions/overview.md): A session represents a single execution of an agent.
+- [Pause a session](https://hub.hcompany.ai/computer-use-agents/sessions/pause.md): Halt a running session without losing state.
+- [Get quota](https://hub.hcompany.ai/computer-use-agents/sessions/quota.md): Check your concurrent session quota.
+- [Get resource](https://hub.hcompany.ai/computer-use-agents/sessions/resources.md): Access session-owned resources like screenshots and files.
+- [Resume a session](https://hub.hcompany.ai/computer-use-agents/sessions/resume.md): Continue a paused session.
+- [Retrieve a session](https://hub.hcompany.ai/computer-use-agents/sessions/retrieve.md): Get full details of a single session.
+- [Send messages](https://hub.hcompany.ai/computer-use-agents/sessions/send-messages.md): Chat with a running agent.
+- [Share a session](https://hub.hcompany.ai/computer-use-agents/sessions/share.md): Make a session publicly accessible or revoke access.
+- [Get session status](https://hub.hcompany.ai/computer-use-agents/sessions/status.md): Lightweight polling endpoint for session progress.
+- [Send tool results](https://hub.hcompany.ai/computer-use-agents/sessions/tool-results.md): Answer the agent's pending custom tool calls.
+- [Create a skill](https://hub.hcompany.ai/computer-use-agents/skills/create.md): Create a reusable skill in your catalog.
+- [Delete a skill](https://hub.hcompany.ai/computer-use-agents/skills/delete.md): Remove a skill from the catalog.
+- [List skills](https://hub.hcompany.ai/computer-use-agents/skills/list.md): Browse your skill catalog.
+- [Skills](https://hub.hcompany.ai/computer-use-agents/skills/overview.md): A skill is a reusable instruction fragment an agent can draw on.
+- [Patch a skill](https://hub.hcompany.ai/computer-use-agents/skills/patch.md): Change individual fields of a skill without resending the full object.
+- [Retrieve a skill](https://hub.hcompany.ai/computer-use-agents/skills/retrieve.md): Get the full details of a skill.
+- [Update a skill](https://hub.hcompany.ai/computer-use-agents/skills/update.md): Edit a skill's content.
+- [Get typed answers](https://hub.hcompany.ai/computer-use-agents/structured-output.md): Get the agent's final answer as typed, schema-validated data instead of free-form text.
+- [Create a vault](https://hub.hcompany.ai/computer-use-agents/vaults/create.md): Register a secrets provider for your organization.
+- [Delete a vault](https://hub.hcompany.ai/computer-use-agents/vaults/delete.md): Remove a vault config.
+- [Check health](https://hub.hcompany.ai/computer-use-agents/vaults/health.md): Probe a vault's provider connection.
+- [List vaults](https://hub.hcompany.ai/computer-use-agents/vaults/list.md): Browse your organization's vault configs.
+- [Vaults](https://hub.hcompany.ai/computer-use-agents/vaults/overview.md): Let an agent sign in to the sites and services it works on, without passing secrets through the API.
+- [Retrieve a vault](https://hub.hcompany.ai/computer-use-agents/vaults/retrieve.md): Fetch a vault config by id.
+- [Rotate the token](https://hub.hcompany.ai/computer-use-agents/vaults/rotate-token.md): Replace a vault's stored service account token.
+- [Update a vault](https://hub.hcompany.ai/computer-use-agents/vaults/update.md): Change a vault config's name or provider settings.
+- [Create a webhook](https://hub.hcompany.ai/computer-use-agents/webhooks/create.md): Register a URL to receive signed event notifications.
+- [Delete a webhook](https://hub.hcompany.ai/computer-use-agents/webhooks/delete.md): Remove a webhook.
+- [List event types](https://hub.hcompany.ai/computer-use-agents/webhooks/events.md): List the webhook event types you can subscribe to.
+- [List webhooks](https://hub.hcompany.ai/computer-use-agents/webhooks/list.md): Browse your organization's webhooks.
+- [Get notified with webhooks](https://hub.hcompany.ai/computer-use-agents/webhooks/overview.md): Receive signed HTTP notifications when your sessions change status.
+- [Ping a webhook](https://hub.hcompany.ai/computer-use-agents/webhooks/ping.md): Send a signed test event and see how your endpoint responds.
+- [Retrieve a webhook](https://hub.hcompany.ai/computer-use-agents/webhooks/retrieve.md): Fetch a single webhook by id.
+- [Rotate a webhook secret](https://hub.hcompany.ai/computer-use-agents/webhooks/rotate.md): Replace the signing secret without missing a verification.
+- [Update a webhook](https://hub.hcompany.ai/computer-use-agents/webhooks/update.md): Change a webhook's URL, events, description, or disabled state.
+- [Document OCR](https://hub.hcompany.ai/document-ocr.md)
+- [Element localization](https://hub.hcompany.ai/element-localization.md)
+- [Glossary](https://hub.hcompany.ai/glossary.md)
+- [Architecture](https://hub.hcompany.ai/holo-desktop-cli/architecture.md): Understand how the HoloDesktop CLI client, runtime, model backend, and host integrations fit together.
+- [Find and fix a UI bug with Claude Code](https://hub.hcompany.ai/holo-desktop-cli/examples/claude-code-ui-qa.md): Use HoloDesktop CLI through MCP from Claude Code to test a running app, fix the source, and verify the UI.
+- [Automate an expense report from the CLI](https://hub.hcompany.ai/holo-desktop-cli/examples/expense-report-automation.md): Run HoloDesktop CLI directly from the command line to read receipts, update a spreadsheet, draft an email, and verify the result.
+- [Examples](https://hub.hcompany.ai/holo-desktop-cli/examples/index.md): Learn HoloDesktop CLI through complete workflows.
+- [Hosted or local models](https://hub.hcompany.ai/holo-desktop-cli/getting-started/hosted-or-local-models.md): Choose how HoloDesktop CLI calls a model backend for desktop tasks.
+- [Quickstart](https://hub.hcompany.ai/holo-desktop-cli/getting-started/quickstart.md): Install HoloDesktop CLI, connect a model, and run your first desktop task in minutes.
+- [Customize with skills, memories, and rules](https://hub.hcompany.ai/holo-desktop-cli/how-to/customize.md): Shape how HoloDesktop CLI behaves across every run with optional files in ~/.holo.
+- [Debug a failed run](https://hub.hcompany.ai/holo-desktop-cli/how-to/debug-failed-run.md): Use doctor, logs, permissions, and model checks to debug a HoloDesktop CLI run.
+- [Embed with Python](https://hub.hcompany.ai/holo-desktop-cli/how-to/embed-with-python.md): Use HoloDesktop CLI's Python agent client to run desktop sessions from your own code.
+- [Run a local model server](https://hub.hcompany.ai/holo-desktop-cli/how-to/run-a-local-model-server.md): Serve an H Company open-weight model locally with llama.cpp or vLLM, then connect HoloDesktop CLI.
+- [HoloDesktop CLI](https://hub.hcompany.ai/holo-desktop-cli/index.md): Use HoloDesktop CLI from your terminal, agent host, or Python code to delegate desktop work.
+- [Use HoloDesktop CLI as an ACP sub-agent](https://hub.hcompany.ai/holo-desktop-cli/integrations/use-acp.md): Delegate desktop tasks to HoloDesktop CLI from an Agent Client Protocol host over stdio.
+- [Use HoloDesktop CLI as a skill](https://hub.hcompany.ai/holo-desktop-cli/integrations/use-as-skill.md): Understand the HoloDesktop CLI skill that gets installed into supported agent hosts.
+- [Use HoloDesktop CLI from the terminal](https://hub.hcompany.ai/holo-desktop-cli/integrations/use-from-cli.md): Run desktop tasks directly from your terminal with holo run.
+- [Use HoloDesktop CLI as an MCP server](https://hub.hcompany.ai/holo-desktop-cli/integrations/use-mcp.md): Expose HoloDesktop CLI to MCP-capable hosts such as Claude Code, Cursor, Codex, and OpenCode.
+- [CLI reference](https://hub.hcompany.ai/holo-desktop-cli/reference/cli.md): Common HoloDesktop CLI commands and options.
+- [Environment variables](https://hub.hcompany.ai/holo-desktop-cli/reference/environment-variables.md): Environment variables used by HoloDesktop CLI and hai-agent-runtime.
+- [Paths and files](https://hub.hcompany.ai/holo-desktop-cli/reference/paths-and-files.md): Local files, logs, runtime cache, skills, and run artifacts used by HoloDesktop CLI.
+- [Security and privacy](https://hub.hcompany.ai/holo-desktop-cli/security-and-privacy.md): Understand what HoloDesktop CLI sends to H Company, what stays local, and how hosted and local model modes differ.
+- [H Tech Hub](https://hub.hcompany.ai/index.md)
+- [Models](https://hub.hcompany.ai/models.md): The Holo models served by the Models API: capabilities, pricing, and lifecycle.
+- [Create chat completion](https://hub.hcompany.ai/models-api/chat-completions.md): OpenAI-compatible chat completion with Holo-specific structured outputs and reasoning.
+- [List models](https://hub.hcompany.ai/models-api/list-models.md): Programmatic discovery of the served models, their capabilities, pricing, and deprecation dates.
+- [Quickstart](https://hub.hcompany.ai/quickstart.md)

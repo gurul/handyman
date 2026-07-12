@@ -1,0 +1,19 @@
+{
+  "name": "handyman",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "server",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "bun run --filter '@handyman/core' build",
+    "server": "bun run --filter '@handyman/server' start",
+    "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p server",
+    "test": "bun test packages/core"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^5.6.0"
+  }
+}

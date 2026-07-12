@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customers — Acme Invoices</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="/index.html" aria-label="Acme Invoices home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
+        <span>Acme Invoices</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a id="nav-dashboard" class="nav-link" href="/index.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a id="nav-customers" class="nav-link is-active" href="/customers.html" aria-current="page">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Customers</span>
+        </a>
+        <a id="nav-invoices" class="nav-link" href="/invoices.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Invoices</span>
+        </a>
+        <a id="nav-settings" class="nav-link" href="/settings.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="avatar" aria-hidden="true">JP</span>
+        <div class="user-meta">
+          <div class="user-name">Jordan Park</div>
+          <div class="user-email">jordan@acme.example</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1 class="page-title">Customers</h1>
+        <div class="topbar-actions">
+          <button id="add-customer" class="btn btn-primary" type="button" aria-label="Add customer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add customer
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="card" aria-label="Customer list">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col" class="num">Open invoices</th>
+                  <th scope="col" class="num">Total billed</th>
+                </tr>
+              </thead>
+              <tbody id="customer-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="customer-dialog" aria-labelledby="customer-dialog-title">
+    <form id="customer-form" novalidate>
+      <div class="dialog-header">
+        <h2 class="dialog-title" id="customer-dialog-title">Add customer</h2>
+        <button type="button" class="icon-btn" id="close-customer-dialog" aria-label="Close dialog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label class="field-label" for="customer-name">Name</label>
+          <input type="text" id="customer-name" name="name" required placeholder="e.g. Bluebird Studios" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label" for="customer-email">Email</label>
+          <input type="email" id="customer-email" name="email" required placeholder="billing@company.com" autocomplete="off">
+        </div>
+        <p class="form-error" id="customer-form-error" hidden>Name and a valid email are required.</p>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="cancel-customer">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-customer">Save customer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/data.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var S = window.AcmeStore;
+      var tbody = document.getElementById("customer-rows");
+
+      function render() {
+        var invoices = S.getInvoices();
+        tbody.innerHTML = S.getCustomers().map(function (c) {
+          var theirs = invoices.filter(function (inv) { return inv.customerId === c.id; });
+          var open = theirs.filter(function (inv) { return inv.status !== "paid"; }).length;
+          var billed = theirs.reduce(function (sum, inv) { return sum + S.invoiceTotal(inv); }, 0);
+          return (
+            "<tr>" +
+            '<td class="cell-strong">' + S.esc(c.name) + "</td>" +
+            '<td class="cell-muted">' + S.esc(c.email) + "</td>" +
+            '<td class="num">' + open + "</td>" +
+            '<td class="num cell-strong">' + S.esc(S.money(billed)) + "</td>" +
+            "</tr>"
+          );
+        }).join("");
+      }
+
+      render();
+
+      var dialog = document.getElementById("customer-dialog");
+      var form = document.getElementById("customer-form");
+      var nameInput = document.getElementById("customer-name");
+      var emailInput = document.getElementById("customer-email");
+      var errorEl = document.getElementById("customer-form-error");
+
+      document.getElementById("add-customer").addEventListener("click", function () {
+        form.reset();
+        errorEl.hidden = true;
+        dialog.showModal();
+        nameInput.focus();
+      });
+
+      document.getElementById("cancel-customer").addEventListener("click", function () {
+        dialog.close();
+      });
+
+      document.getElementById("close-customer-dialog").addEventListener("click", function () {
+        dialog.close();
+      });
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var name = nameInput.value.trim();
+        var email = emailInput.value.trim();
+        if (!name || !email || email.indexOf("@") === -1) {
+          errorEl.hidden = false;
+          return;
+        }
+        S.addCustomer({ name: name, email: email });
+        dialog.close();
+        render();
+      });
+    })();
+  </script>
+
+  <script src="/handyman.js"></script>
+  <script>Handyman.init({ endpoint: "/api" });</script>
+</body>
+</html>

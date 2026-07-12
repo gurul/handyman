@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — Acme Invoices</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="/index.html" aria-label="Acme Invoices home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
+        <span>Acme Invoices</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a id="nav-dashboard" class="nav-link is-active" href="/index.html" aria-current="page">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a id="nav-customers" class="nav-link" href="/customers.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Customers</span>
+        </a>
+        <a id="nav-invoices" class="nav-link" href="/invoices.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Invoices</span>
+        </a>
+        <a id="nav-settings" class="nav-link" href="/settings.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="avatar" aria-hidden="true">JP</span>
+        <div class="user-meta">
+          <div class="user-name">Jordan Park</div>
+          <div class="user-email">jordan@acme.example</div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1 class="page-title">Dashboard</h1>
+        <div class="topbar-actions">
+          <a id="new-invoice" class="btn btn-primary" href="/invoice-new.html" aria-label="New Invoice">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Invoice
+          </a>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="stat-grid" aria-label="Key metrics">
+          <div class="stat-card">
+            <span class="stat-label">Outstanding</span>
+            <span class="stat-value" id="stat-outstanding">—</span>
+            <span class="stat-hint" id="stat-outstanding-hint">Awaiting payment</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Paid this month</span>
+            <span class="stat-value" id="stat-paid">—</span>
+            <span class="stat-hint" id="stat-paid-hint">Collected</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Overdue</span>
+            <span class="stat-value" id="stat-overdue">—</span>
+            <span class="stat-hint" id="stat-overdue-hint">Past due date</span>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Recent invoices">
+          <div class="card-header">
+            <h2 class="card-title">Recent invoices</h2>
+            <a class="btn btn-ghost" href="/invoices.html" id="view-all-invoices">View all</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Invoice</th>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Issued</th>
+                  <th scope="col">Due</th>
+                  <th scope="col" class="num">Amount</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-invoices"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/data.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var S = window.AcmeStore;
+      var invoices = S.getInvoices();
+
+      var outstanding = 0;
+      var paid = 0;
+      var overdue = 0;
+      var overdueCount = 0;
+      var outstandingCount = 0;
+
+      invoices.forEach(function (inv) {
+        var total = S.invoiceTotal(inv);
+        if (inv.status === "paid") paid += total;
+        if (inv.status === "outstanding") {
+          outstanding += total;
+          outstandingCount += 1;
+        }
+        if (inv.status === "overdue") {
+          overdue += total;
+          overdueCount += 1;
+        }
+      });
+
+      document.getElementById("stat-outstanding").textContent = S.money(outstanding + overdue);
+      document.getElementById("stat-outstanding-hint").textContent =
+        (outstandingCount + overdueCount) + " open invoices";
+      document.getElementById("stat-paid").textContent = S.money(paid);
+      document.getElementById("stat-overdue").textContent = S.money(overdue);
+      document.getElementById("stat-overdue-hint").textContent =
+        overdueCount + " invoices past due";
+
+      var recent = invoices.slice().sort(function (a, b) {
+        return a.issueDate < b.issueDate ? 1 : -1;
+      }).slice(0, 5);
+
+      document.getElementById("recent-invoices").innerHTML = recent.map(function (inv) {
+        return (
+          "<tr>" +
+          '<td class="cell-strong">' + S.esc(inv.number) + "</td>" +
+          "<td>" + S.esc(S.getCustomerName(inv.customerId)) + "</td>" +
+          '<td class="cell-muted">' + S.esc(S.date(inv.issueDate)) + "</td>" +
+          '<td class="cell-muted">' + S.esc(S.date(inv.dueDate)) + "</td>" +
+          '<td class="num cell-strong">' + S.esc(S.money(S.invoiceTotal(inv))) + "</td>" +
+          '<td><span class="chip chip-' + S.esc(inv.status) + '">' +
+            S.esc(S.statusLabel(inv.status)) + "</span></td>" +
+          "</tr>"
+        );
+      }).join("");
+    })();
+  </script>
+
+  <script src="/handyman.js"></script>
+  <script>Handyman.init({ endpoint: "/api" });</script>
+</body>
+</html>
