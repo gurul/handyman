@@ -8,8 +8,57 @@
 // snapdom is the best-maintained full-fidelity DOM rasterizer and supports
 // declarative exclusion (`exclude` + excludeMode:"hide" keeps layout), which
 // we use to keep handyman's own overlay/pointer/FAB out of the observation.
+//
+// Cross-origin image handling (grounded via Context7 /zumerlab/snapdom + the
+// installed 2.15.0 source, 2026-07-11): snapdom inlines every <img> by fetching
+// its bytes as a dataURL. On a third-party site (github.com, etc.) those fetches
+// hit CORS — each one errors (`[snapDOM] Network/CORS issue …`) and blocks the
+// capture up to snapdom's ~3s per-resource timeout, so an avatar/logo-heavy page
+// makes the FIRST capture slow and noisy. `useProxy` is NOT a general fix: strict
+// third-party CSP (connect-src) blocks our localhost proxy and snapdom's fetches
+// can't use the extension transport, so proxying just moves the failure.
+//
+// The H vision model grounds on layout/text/controls, not on avatar pixels, so
+// we drop cross-origin <img> from the capture via snapdom's `filter` predicate
+// with the default filterMode:"hide". Verified against dist/snapdom.mjs: a node
+// the filter rejects in "hide" mode is replaced by `Ee(t)` — an inline-block div
+// sized to the element's measured box with visibility:hidden and NO `src`. So the
+// image's box geometry is preserved (all grounding needs) while its remote bytes
+// are never fetched: no CORS errors, no timeout stall, no network dependency.
+// Same-origin <img> are kept and inline normally (same-origin fetch, no CORS).
 
 import { snapdom } from '@zumer/snapdom';
+
+/**
+ * True when `raw` resolves to the current document's origin, or is an inline
+ * scheme (data:/blob:) that needs no network fetch. Unparseable → treat as
+ * same-origin so we never drop a node we can't classify.
+ */
+function isSameOriginOrInline(raw: string): boolean {
+	try {
+		const u = new URL(raw, document.baseURI);
+		if (u.protocol === 'data:' || u.protocol === 'blob:') return true;
+		return u.origin === window.location.origin;
+	} catch {
+		return true;
+	}
+}
+
+/**
+ * snapdom `filter` predicate: return true to keep a node, false to exclude it.
+ * We reject only cross-origin <img> — snapdom then swaps in a same-size hidden
+ * placeholder (box preserved) instead of fetching the remote bytes. Everything
+ * else, including same-origin images, is kept untouched.
+ */
+function keepNode(el: Element): boolean {
+	if (el.tagName === 'IMG') {
+		const img = el as HTMLImageElement;
+		// currentSrc/src are already absolute; fall back to the raw attribute.
+		const src = img.currentSrc || img.src || img.getAttribute('src') || '';
+		if (src.length > 0 && !isSameOriginOrInline(src)) return false;
+	}
+	return true;
+}
 
 export interface ViewportCapture {
 	/** JPEG data URI of the current viewport (downscaled; longest side ≤ MAX_IMAGE_EDGE). */
@@ -64,6 +113,11 @@ export async function captureViewport(): Promise<ViewportCapture> {
 		dpr: 1, // keep the raster 1:1 with CSS px (× outScale) so coords map cleanly
 		exclude: ['[data-handyman]'],
 		excludeMode: 'hide',
+		// Drop cross-origin <img> before snapdom fetches their bytes. filterMode
+		// "hide" (default) keeps each image's box via a visibility:hidden placeholder
+		// so layout/coords are unchanged; no remote fetch → no CORS errors or stall.
+		filter: keepNode,
+		filterMode: 'hide',
 		compress: true,
 	});
 	const full = await result.toCanvas();

@@ -4,6 +4,12 @@
  */
 
 export interface TTSPlayer {
+  /**
+   * Create + resume the AudioContext synchronously. MUST be called from a real
+   * user gesture (FAB click, mic click, hotkey) so Chrome's autoplay policy
+   * lets later speak() calls produce sound. Idempotent — a no-op once running.
+   */
+  unlock(): void;
   speak(text: string): Promise<void>;
   stop(): void;
 }
@@ -18,5 +24,6 @@ export interface STTCallbacks {
   onError?(e: unknown): void;
 }
 
+export type { VoiceTransport } from "./token";
 export { createTTS } from "./tts";
 export { startSTT } from "./stt";

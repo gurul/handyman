@@ -6,7 +6,7 @@
 
 import type { TTSPlayer } from "./index";
 import { base64ToInt16 } from "./base64";
-import { fetchVoiceToken, gradiumWsUrl } from "./token";
+import { fetchVoiceToken, gradiumWsUrl, type VoiceTransport } from "./token";
 
 const VOICE_ID = "YTpq7expH9539ERJ";
 const SAMPLE_RATE = 48_000;
@@ -30,8 +30,9 @@ interface Utterance {
   resolve: () => void;
 }
 
-export function createTTS(endpoint: string): TTSPlayer {
-  // Lazy: created on first speak(), which must follow a user gesture.
+export function createTTS(endpoint: string, transport?: VoiceTransport): TTSPlayer {
+  // Preferably created by unlock() on a user gesture; lazily on first speak()
+  // otherwise (which Chrome's autoplay policy leaves suspended off-gesture).
   let ctx: AudioContext | null = null;
   let active: Utterance | null = null;
 
@@ -96,6 +97,13 @@ export function createTTS(endpoint: string): TTSPlayer {
   }
 
   return {
+    unlock(): void {
+      // Runs inside a user-gesture handler: create + resume synchronously so
+      // the AudioContext is "running" before any off-gesture speak(). No-op if
+      // already running.
+      ensureContext();
+    },
+
     speak(text: string): Promise<void> {
       if (active) settle(active); // new speak() interrupts the current one
       const audioCtx = ensureContext();
@@ -114,8 +122,12 @@ export function createTTS(endpoint: string): TTSPlayer {
         void (async () => {
           let ws: WebSocket;
           try {
-            // Tokens are single-use: fetch a fresh one per connect.
-            const token = await fetchVoiceToken(endpoint);
+            // Tokens are single-use: fetch a fresh one per connect. The token
+            // request goes through `transport` (extension bridge) under strict
+            // CSP; the WS below still connects directly from the page — WS can't
+            // route through the fetch bridge, so it is best-effort under a strict
+            // connect-src, but the token fetch (the reported failure) now works.
+            const token = await fetchVoiceToken(endpoint, transport);
             if (utt.settled) return;
             ws = new WebSocket(gradiumWsUrl("tts", token));
           } catch (err) {

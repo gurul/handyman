@@ -10,14 +10,37 @@ interface VoiceTokenResponse {
   expires_at: string;
 }
 
-/** Fetch a fresh single-use token from the widget proxy: GET {endpoint}/voice-token */
-export async function fetchVoiceToken(endpoint: string): Promise<string> {
-  const url = `${endpoint.replace(/\/+$/, "")}/voice-token`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS) });
-  if (!res.ok) {
-    throw new Error(`voice-token request failed: ${res.status} ${res.statusText}`);
+/**
+ * Proxy transport, same shape as HandymanConfig.transport. When supplied, the
+ * token request routes through the extension's content-script relay instead of
+ * a direct page fetch, so it bypasses the host page's CSP `connect-src`.
+ * `path` is proxy-relative and leads with a slash; resolves with parsed JSON.
+ */
+export type VoiceTransport = (
+  path: string,
+  init: { method: "GET" | "POST"; body?: unknown },
+) => Promise<unknown>;
+
+/**
+ * Fetch a fresh single-use token from the widget proxy: GET {endpoint}/voice-token.
+ * Uses `transport` (the extension bridge) when provided so the request survives a
+ * strict-CSP host page; otherwise falls back to a direct page fetch.
+ */
+export async function fetchVoiceToken(
+  endpoint: string,
+  transport?: VoiceTransport,
+): Promise<string> {
+  let body: VoiceTokenResponse;
+  if (transport) {
+    body = (await transport("/voice-token", { method: "GET" })) as VoiceTokenResponse;
+  } else {
+    const url = `${endpoint.replace(/\/+$/, "")}/voice-token`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS) });
+    if (!res.ok) {
+      throw new Error(`voice-token request failed: ${res.status} ${res.statusText}`);
+    }
+    body = (await res.json()) as VoiceTokenResponse;
   }
-  const body = (await res.json()) as VoiceTokenResponse;
   if (!body.token) {
     throw new Error("voice-token response missing token");
   }

@@ -7,7 +7,7 @@
 
 import type { STTCallbacks, STTSession } from "./index";
 import { int16ToBase64 } from "./base64";
-import { fetchVoiceToken, gradiumWsUrl, openSocket } from "./token";
+import { fetchVoiceToken, gradiumWsUrl, openSocket, type VoiceTransport } from "./token";
 
 const TARGET_RATE = 24_000;
 const CHUNK_SAMPLES = 2_400; // 100ms at 24kHz
@@ -104,9 +104,15 @@ async function createCapture(
   };
 }
 
-export async function startSTT(endpoint: string, opts: STTCallbacks): Promise<STTSession> {
-  // Tokens are single-use: fetch a fresh one per connect.
-  const token = await fetchVoiceToken(endpoint);
+export async function startSTT(
+  endpoint: string,
+  opts: STTCallbacks,
+  transport?: VoiceTransport,
+): Promise<STTSession> {
+  // Tokens are single-use: fetch a fresh one per connect. Routes through the
+  // extension bridge (`transport`) under strict CSP; the WS below still connects
+  // directly from the page (best-effort under strict connect-src).
+  const token = await fetchVoiceToken(endpoint, transport);
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
   let ctx: AudioContext | null = null;

@@ -53,15 +53,21 @@ function hotkeyMatches(e: KeyboardEvent, h: Hotkey): boolean {
 
 // Voice module contract (built in parallel under src/voice/). Types are
 // declared locally so core compiles and ships while voice is absent.
+// `transport` mirrors HandymanConfig.transport: proxy calls (voice-token) route
+// through the extension bridge so voice works on strict-CSP third-party sites.
+type VoiceTransport = HandymanConfig['transport'];
 interface VoiceTTS {
+	/** Create + resume the AudioContext; must run from a user gesture. */
+	unlock(): void;
 	speak(t: string): Promise<void>;
 	stop(): void;
 }
 interface VoiceModule {
-	createTTS(endpoint: string): VoiceTTS;
+	createTTS(endpoint: string, transport?: VoiceTransport): VoiceTTS;
 	startSTT(
 		endpoint: string,
 		opts: { onFinal(text: string): void },
+		transport?: VoiceTransport,
 	): Promise<{ stop(): void }>;
 }
 
@@ -84,6 +90,11 @@ let instance: Instance | null = null;
 
 export function init(config: HandymanConfig): void {
 	if (instance !== null) instance.destroy();
+	// Hard singleton: sweep any orphan hosts a prior instance left behind
+	// (double script-load, or a bfcache-restored page whose module-level
+	// `instance` reset but whose DOM survived). Two live widgets fight over
+	// the overlay and a second query then never starts cleanly.
+	document.querySelectorAll('[data-handyman]').forEach((h) => h.remove());
 
 	const z = config.zIndex ?? DEFAULT_Z;
 	let tts: VoiceTTS | null = null;
@@ -92,7 +103,12 @@ export function init(config: HandymanConfig): void {
 
 	const fab = createFab({
 		zIndex: z,
-		onAsk: (q) => session.ask(q),
+		// FAB submit is a real user gesture: unlock the AudioContext here so the
+		// step narration that follows is audible under Chrome's autoplay policy.
+		onAsk: (q) => {
+			tts?.unlock();
+			session.ask(q);
+		},
 	});
 
 	const overlay = createOverlay({
@@ -145,7 +161,7 @@ export function init(config: HandymanConfig): void {
 	// Voice is optional: wire TTS + the FAB mic + the keyboard hotkey if present.
 	void loadVoice().then((voice) => {
 		if (voice === null || instance === null) return;
-		if (config.tts !== false) tts = voice.createTTS(config.endpoint);
+		if (config.tts !== false) tts = voice.createTTS(config.endpoint, config.transport);
 		if (config.stt === false) return;
 
 		// Shared listen path: the FAB mic button and the keyboard hotkey both
@@ -156,6 +172,9 @@ export function init(config: HandymanConfig): void {
 
 		function startListening(): void {
 			if (listening) return;
+			// Reached only from the mic click or the hotkey — both user gestures —
+			// so unlock the AudioContext for the answer narration that follows.
+			tts?.unlock();
 			listening = true;
 			fab.setListening(true);
 			voice!
@@ -169,7 +188,7 @@ export function init(config: HandymanConfig): void {
 						fab.closePanel();
 						if (text) session.ask(text);
 					},
-				})
+				}, config.transport)
 				.then((handle) => {
 					// A cancel that raced the await already flipped `listening`; if so,
 					// tear the just-opened session straight back down.
