@@ -1,7 +1,7 @@
 // Baseline: the current hand (exact pose data from packages/core/src/hand.ts).
 window.STYLES.push({
 	name: 'original',
-	blurb: 'The vendored EraHand shape as shipped today — straight butt-capped strokes, hard rectangular fingers.',
+	blurb: 'The first-generation shape — straight butt-capped strokes, hard rectangular fingers.',
 	lineCap: 'butt',
 	poses: {
 		open: {
