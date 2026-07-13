@@ -88,16 +88,15 @@ const CAN_RAF =
 // as a hand.
 const HAND_SIZE = 76;
 
-// In the `pointer` pose the index finger aims up-and-right (~58.9° above the
-// horizontal after the engine's X-mirror: base (130,0) → tip (258,-212)).
-// Rotating the host by this offset re-aims it straight up, which is the
-// convention SIDE_ROT assumes.
-const AIM_OFFSET = -31.1;
+// In the `pointer` pose the index finger aims up-and-right (~60.5° above the
+// horizontal after the engine's X-mirror). Rotating the host by this offset
+// re-aims it straight up, which is the convention SIDE_ROT assumes.
+const AIM_OFFSET = -29.5;
 
 // Index fingertip in host coordinates (unrotated): mirrored tip
-// (258, -212) × HAND_SIZE/refSize(841), relative to host center.
-const TIP_X = HALF + 258 * (HAND_SIZE / 841);
-const TIP_Y = HALF + -212 * (HAND_SIZE / 841);
+// (242.03, -197.65) × HAND_SIZE/refSize(841.32), relative to host center.
+const TIP_X = HALF + 242.03 * (HAND_SIZE / 841.32);
+const TIP_Y = HALF + -197.65 * (HAND_SIZE / 841.32);
 
 // The index finger points up at rotation 0 (after AIM_OFFSET); rotate the
 // whole wrapper so it points at the target from whichever side it sits on.

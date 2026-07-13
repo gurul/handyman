@@ -16,31 +16,27 @@ export const HAND_VIEWBOX = '-297 -264 595 625';
 /** Aspect ratio height/width of the viewBox (625/595). */
 export const HAND_ASPECT = 625 / 595;
 
-// Soft-rounded skin (design/hand-styles/soft-rounded.js): thinner strokes,
-// round caps, longer fingers. The pose's subtle bezier bows are approximated
-// as straight lines here — invisible at video sizes.
 const OPEN_LINES: Record<FingerName, { x1: number; y1: number; x2: number; y2: number }> = {
-	thumb: { x1: -58, y1: 285, x2: -248, y2: 128 },
-	index: { x1: -64, y1: 56, x2: -160, y2: -190 },
-	middle: { x1: 12, y1: 20, x2: -32, y2: -236 },
-	ring: { x1: 95, y1: 42, x2: 80, y2: -212 },
-	pinky: { x1: 162, y1: 110, x2: 212, y2: -110 },
+	thumb: { x1: -62.614, y1: 302.668, x2: -238.854, y2: 152.503 },
+	index: { x1: -58.299, y1: 53.64, x2: -169.76, y2: -149.304 },
+	middle: { x1: 19.092, y1: 15.25, x2: -49.209, y2: -205.985 },
+	ring: { x1: 100.978, y1: 38.951, x2: 76.116, y2: -191.248 },
+	pinky: { x1: 173.022, y1: 106.083, x2: 209.528, y2: -122.559 },
 };
 
 const POINTER_LINES: Partial<Record<FingerName, { x1: number; y1: number; x2: number; y2: number }>> = {
-	thumb: { x1: -98, y1: 218, x2: -155, y2: 8 },
-	index: { x1: -130, y1: 0, x2: -258, y2: -212 },
+	thumb: { x1: -102.522, y1: 214.24, x2: -152.091, y2: -3.407 },
+	index: { x1: -132.216, y1: -3.311, x2: -242.031, y2: -197.651 },
 };
 
-// Curled fingertip dots: diameter = rectWidth(85) × 1.28 → r ≈ 54.4.
 const POINTER_DOTS: Partial<Record<FingerName, { cx: number; cy: number; r: number }>> = {
-	middle: { cx: -56, cy: 24, r: 54.4 },
-	ring: { cx: 6, cy: 42, r: 54.4 },
-	pinky: { cx: 64, cy: 70, r: 54.4 },
+	middle: { cx: -57.603, cy: 22.953, r: 72 },
+	ring: { cx: 4.455, cy: 40.398, r: 72 },
+	pinky: { cx: 62.533, cy: 69.58, r: 72 },
 };
 
-const STROKE_OPEN = 87;
-const STROKE_POINTER = 85;
+const STROKE_OPEN = 115.769;
+const STROKE_POINTER = 111.61;
 
 export type HandPalette = 'tints' | 'paper' | 'ink';
 
@@ -97,7 +93,7 @@ export const Hand: React.FC<{
 								y2={line.y2}
 								stroke={fingerColor(finger, palette)}
 								strokeWidth={strokeWidth}
-								strokeLinecap="round"
+								strokeLinecap="butt"
 								strokeDasharray={len}
 								strokeDashoffset={len * (1 - r)}
 							/>

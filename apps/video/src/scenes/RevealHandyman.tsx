@@ -39,21 +39,19 @@ const HAND_H = HAND_W * HAND_ASPECT;
 const VB_SCALE = HAND_W / 595;
 // Index fingertip (Hand.tsx OPEN_LINES.index endpoint, X-mirrored by the
 // engine's scale(-1 1)) relative to the viewBox center (0.5, 48.5).
-const INDEX_TIP_PX = { x: (160 - 0.5) * VB_SCALE, y: (-190 - 48.5) * VB_SCALE };
+const INDEX_TIP_PX = { x: (169.76 - 0.5) * VB_SCALE, y: (-149.304 - 48.5) * VB_SCALE };
 // The "?" hangs at screen center; the hand is placed so its index tip touches
 // the glyph's dot from below-left (NOT the glyph center — the ~82px-wide
 // accent stroke would fully occlude the accent "?" and hide the tap beat).
 const Q_POS = { x: 960, y: 540 };
-// Nudged for the soft-rounded skin: round caps extend ~r past the endpoint,
-// so the touch point sits lower-left or the cap swallows the "?" dot.
-const TIP_TOUCH = { x: 926, y: 612 };
+const TIP_TOUCH = { x: 940, y: 585 };
 const HAND_C2 = { x: TIP_TOUCH.x - INDEX_TIP_PX.x, y: TIP_TOUCH.y - INDEX_TIP_PX.y };
 const HAND_C3 = { x: 700, y: 500 };
 
 // Exact index-stroke geometry from Hand.tsx (OPEN_LINES.index / STROKE_OPEN),
 // mirrored the same way, so the overlay sits pixel-perfect over the lib hand.
-const INDEX_LINE = { x1: -64, y1: 56, x2: -160, y2: -190 };
-const STROKE_OPEN = 87;
+const INDEX_LINE = { x1: -58.299, y1: 53.64, x2: -169.76, y2: -149.304 };
+const STROKE_OPEN = 115.769;
 
 export const RevealHandyman: React.FC = () => {
 	const frame = useCurrentFrame();
@@ -180,7 +178,7 @@ export const RevealHandyman: React.FC = () => {
 									y2={INDEX_LINE.y2}
 									stroke={ACCENT}
 									strokeWidth={STROKE_OPEN}
-									strokeLinecap="round"
+									strokeLinecap="butt"
 								/>
 							</g>
 						</svg>
