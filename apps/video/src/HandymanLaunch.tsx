@@ -29,16 +29,15 @@ export const SCENES = [
 export const TOTAL_FRAMES = SCENES.reduce((sum, s) => sum + s.frames, 0);
 
 // Music envelope ("ES_Hold You" — Andre Aguado, public/music.mp3): quick
-// fade-in, full under the motion scenes, ducked to 35% while the demo's own
-// audio plays (scene 4, frames 660-1627), restored after, resolving to
-// silence through the end card's stillness.
-const DEMO_START = 660;
-const DEMO_END = 1628;
+// fade-in, full throughout, resolving to silence through the end card's
+// stillness. No duck under the demo — the demo footage's own audio track is
+// near-silence, so ducking just hollowed out a third of the film (measured
+// -21 dB vs the track's -11.8 dB overall).
 function musicVolume(f: number): number {
 	return interpolate(
 		f,
-		[0, 12, DEMO_START - 12, DEMO_START + 12, DEMO_END - 12, DEMO_END + 20, TOTAL_FRAMES - 70, TOTAL_FRAMES - 1],
-		[0, 1, 1, 0.35, 0.35, 1, 1, 0],
+		[0, 12, TOTAL_FRAMES - 70, TOTAL_FRAMES - 1],
+		[0, 1, 1, 0],
 		{ extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
 	);
 }
