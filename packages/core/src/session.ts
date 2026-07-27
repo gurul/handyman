@@ -394,12 +394,17 @@ export function createSession(deps: SessionDeps): SessionHandle {
 		return r instanceof Promise ? r : Promise.resolve();
 	}
 
-	/** Resolve when p settles OR the cap elapses, whichever comes first. */
+	/** Resolve when p settles OR the cap elapses, whichever comes first. The
+	 *  timer is cleared on the fast path so a 12s narration cap does not keep a
+	 *  pending timeout alive for every acted step of the tour. */
 	function capped(p: Promise<void>, ms: number): Promise<void> {
+		let timer: ReturnType<typeof setTimeout>;
 		return Promise.race([
 			p.catch(() => {}),
-			new Promise<void>((res) => setTimeout(res, ms)),
-		]);
+			new Promise<void>((res) => {
+				timer = setTimeout(res, ms);
+			}),
+		]).finally(() => clearTimeout(timer));
 	}
 
 	function detachTargetListener(): void {
@@ -663,7 +668,26 @@ export function createSession(deps: SessionDeps): SessionHandle {
 		})();
 	}
 
+	/**
+	 * Act path entry point. Every caller fires this with `void`, so anything that
+	 * threw inside used to surface as an unhandled rejection and leave the tour
+	 * parked in `acting` forever: no error card, no docked pointer, and the scrim
+	 * still up. observe() has always funnelled its own failures into fail(); this
+	 * does the same for the half of the loop that drives.
+	 */
 	async function performAct(
+		tc: ActClickCall | ActWriteCall,
+		myGen: number,
+	): Promise<void> {
+		try {
+			await runAct(tc, myGen);
+		} catch (err) {
+			if (myGen !== gen) return;
+			fail(err);
+		}
+	}
+
+	async function runAct(
 		tc: ActClickCall | ActWriteCall,
 		myGen: number,
 	): Promise<void> {

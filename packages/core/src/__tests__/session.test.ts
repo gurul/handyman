@@ -275,6 +275,45 @@ describe('session', () => {
 		expect(input.value).toBe('My own description');
 	});
 
+	/** The act path is fired with `void` by every caller, so a throw inside it
+	 *  used to become an unhandled rejection: the tour parked in `acting`
+	 *  forever, scrim still up, with no error card and the pointer never docked. */
+	it('surfaces an error card when the act path throws instead of hanging', async () => {
+		const input = document.createElement('input');
+		stubRect(input, 100, 100, 200, 30);
+		document.body.appendChild(input);
+		document.elementFromPoint = () => input;
+
+		// Rebuild the session over a pointer whose press() rejects — the failure
+		// mode this guards against (a DOM/animation error mid-act).
+		session.destroy();
+		const brokenPointer: PointerHandle = {
+			...pointer,
+			press: () => Promise.reject(new Error('pointer press failed')),
+		};
+		session = createSession({
+			config: { endpoint: ENDPOINT },
+			overlay,
+			pointer: brokenPointer,
+			fabCenter: () => ({ x: 990, y: 740 }),
+			capture: async () => ({
+				screenshot: 'data:image/png;base64,AAAA',
+				viewport: { width: 1024, height: 768 },
+			}),
+			timings: TIMINGS,
+		});
+
+		mockFetch([writeStep(), answerStep()]);
+		session.ask('fill the form');
+		await waitFor(() => session.getState() === 'waiting_user', 3000);
+		session.ui.doIt();
+
+		await waitFor(() => session.getState() === 'done', 3000);
+		expect(q('.handyman-card').textContent).toContain('could not finish this tour');
+		// The failed act never typed anything.
+		expect(input.value).toBe('');
+	});
+
 	it('resumes a persisted cross-page session with user_acted', async () => {
 		sessionStorage.setItem(
 			'handyman:session',

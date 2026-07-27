@@ -7,7 +7,7 @@ import { config } from './config.ts';
 import { StepError } from './errors.ts';
 import { log } from './logger.ts';
 import { stepJsonSchema, stepSchema } from './schema.ts';
-import { getSession, type ChatMessage } from './sessions.ts';
+import { getSession, trimHistory, type ChatMessage } from './sessions.ts';
 
 const MODEL_NAME = 'holo3-1-35b-a3b';
 // H docs cap the image budget at 3; we keep 1 (the current viewport only).
@@ -145,6 +145,10 @@ export async function handleStep(req: StepRequest): Promise<StepResponse> {
 		});
 	}
 	session.messages.push(observationMessage(req));
+	// Trim to the retention window first, so the image budget below is applied
+	// across the messages that will actually be sent. The observation just pushed
+	// is always inside the window, so the current screenshot always survives.
+	trimHistory(session);
 	trimToLastNImages(session.messages, MAX_IMAGES_IN_CONTEXT);
 
 	let content: string;

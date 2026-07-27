@@ -107,7 +107,7 @@ Credentials belong in `server/.env`. Never commit API keys.
 |---|---:|---|
 | `HAI_API_KEY` | Yes | H Company Models API. `/api/step` returns 503 without it |
 | `GRADIUM_API_KEY` | For voice | Gradium TTS/STT. Without it, `/api/voice-token` returns 503 and tours run silently |
-| `PORT` | No | Server port, defaults to `3000` |
+| `PORT` | No | Server port, defaults to `3000`. A value that is set but not an integer in `[0, 65535]` is rejected at startup rather than silently falling back |
 
 Widget options, passed to `Handyman.init(config)`:
 
@@ -119,6 +119,17 @@ Widget options, passed to `Handyman.init(config)`:
 | `hotkey` | `"Alt+KeyH"` | Toggles listening. Matched on physical key, so it is layout independent |
 | `zIndex` | `2147483000` | Base z-index for the widget's layers |
 
+## Limits and safeguards
+
+The proxy holds real API keys and the extension bridge is CSP-immune by design, so both are bounded rather than open-ended.
+
+| Boundary | Limit | Why |
+|---|---|---|
+| `POST /api/step` body | Screenshot ≤ 8 MB, question ≤ 2000 chars, URL ≤ 4096 chars, session id ≤ 200 chars | An oversized body is rejected with `400` at the HTTP boundary instead of being retained in a session and billed as model prefill. Both capture paths cap the raster at a 1024 px longest edge, well inside these |
+| Live sessions | 500, least-recently-used evicted | The TTL sweep runs every 5 minutes; between sweeps every distinct `session_id` mints a conversation |
+| Conversation history | 60 messages per session, plus the system prompt | Prefill is most of the per-step latency felt after a click. Screenshots are already evicted down to the newest one |
+| Extension proxy bridge | `/step` and `/voice-token` only | `path` arrives from the page over `postMessage`, so the bridge is pinned to the routes the widget actually calls — the same defence the voice bridge applies to its WebSocket destination |
+
 ## Commands
 
 | Command | Description |
@@ -127,8 +138,8 @@ Widget options, passed to `Handyman.init(config)`:
 | `bun run server` | Serve the proxy only |
 | `bun run build` | Build the widget IIFE into `packages/core/dist` |
 | `bun run build:ext` | Build the extension into `apps/extension/dist` |
-| `bun test` | Run the widget test suite |
-| `bun run typecheck` | Run `tsc` over widget and server |
+| `bun test` | Run the widget and server test suites |
+| `bun run typecheck` | Run `tsc` over widget, server, and extension |
 
 ## Project layout
 

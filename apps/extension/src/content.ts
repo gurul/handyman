@@ -42,11 +42,29 @@ interface ReqMsg {
 	init: { method?: 'GET' | 'POST'; body?: unknown };
 }
 
+/**
+ * Proxy paths the widget is allowed to reach through the bridge.
+ *
+ * `path` arrives by window.postMessage, so it is PAGE-CONTROLLED — any script on
+ * the host page can post a `__handyman:'req'` and have this privileged, CSP-immune
+ * relay perform the fetch and hand back the parsed body. The endpoint prefix is
+ * ours (read from chrome.storage, never from the message), but without this gate
+ * the suffix is free: any route the local proxy exposes, now or later, is
+ * reachable and readable from any page the widget runs on.
+ *
+ * Pinning the two routes the widget actually calls is the same defence the voice
+ * bridge already applies to its destination (WS_HOST in background.ts) — the
+ * bridge should only be able to reach what the widget needs.
+ */
+const ALLOWED_PATHS = new Set(['/step', '/voice-token']);
+
 function isReqMsg(d: unknown): d is ReqMsg {
 	return (
 		typeof d === 'object' &&
 		d !== null &&
-		(d as { __handyman?: unknown }).__handyman === 'req'
+		(d as { __handyman?: unknown }).__handyman === 'req' &&
+		typeof (d as { id?: unknown }).id === 'number' &&
+		typeof (d as { path?: unknown }).path === 'string'
 	);
 }
 
@@ -93,6 +111,14 @@ function postToPage(msg: Record<string, unknown>): void {
 // the privileged fetch, then relay its response back to the main world.
 function relay(req: ReqMsg, endpoint: string): void {
 	console.debug('[handyman-ext] content: req received', req.id, req.path);
+	if (!ALLOWED_PATHS.has(req.path)) {
+		// Reply rather than drop: the widget's transport promise would otherwise
+		// hang until its own 20s timeout, and a real bug (a route added to the
+		// widget but not here) should say so instead of looking like a dead proxy.
+		console.warn('[handyman-ext] content: blocked proxy path', req.path);
+		post({ id: req.id, ok: false, error: `blocked proxy path: ${req.path}` });
+		return;
+	}
 	chrome.runtime.sendMessage(
 		{ type: 'handyman-fetch', endpoint, path: req.path, init: req.init },
 		(resp: FetchResponse | undefined) => {
