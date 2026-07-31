@@ -22,6 +22,8 @@ Built for the **Computer Use Agents Hackathon 2026** (48 Hours, 120 Builders).
   <i>2nd place at the Computer Use Agent Hack — San Francisco, July 12, 2026</i>
 </p>
 
+After winning the hackathon, Handyman was incorporated into the [Era](https://era.world) platform.
+
 ## What Handyman does
 
 1. **Take a question** in plain language, typed or spoken aloud (`Alt+H`).
