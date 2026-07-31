@@ -24,6 +24,10 @@ Built for the **Computer Use Agents Hackathon 2026** (48 Hours, 120 Builders).
 
 After winning the hackathon, Handyman was incorporated into the [Era](https://era.world) platform.
 
+<p align="center">
+  <img src="assets/era-maker.png" alt="Era Maker onboarding — Handyman's guided-tour technology live inside the Era platform" width="100%">
+</p>
+
 ## What Handyman does
 
 1. **Take a question** in plain language, typed or spoken aloud (`Alt+H`).
